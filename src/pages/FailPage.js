@@ -2,15 +2,12 @@ import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 export default function FailPage() {
-    const [searchParams] = useSearchParams();
-    const code = searchParams.get("code");
-    const message = searchParams.get("message");
-
+    const searchParams = new URLSearchParams(window.location.search);
     return (
-        <div>
+        <div style={{ padding: '20px' }}>
             <h1>결제 실패</h1>
-            <p><b>실패 코드:</b> {code}</p>
-            <p><b>실패 사유:</b> {message}</p>
+            <p>{searchParams.get("message")}</p>
+            <button onClick={() => window.location.href = '/'}>홈으로</button>
         </div>
     );
 }
