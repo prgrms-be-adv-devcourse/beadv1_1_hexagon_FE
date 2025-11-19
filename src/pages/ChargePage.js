@@ -91,7 +91,7 @@ function ChargePage() {
             <button
                 style={{
                     ...styles.submitButton,
-                    backgroundColor: amount ? '#2AC1BC' : '#E2E2E2', // 입력값 있으면 민트색, 없으면 회색
+                    backgroundColor: amount ? '#3182f6' : '#E2E2E2', // 입력값 있으면 민트색, 없으면 회색
                     color: amount ? 'white' : '#999'
                 }}
                 disabled={!amount}
@@ -222,6 +222,7 @@ const styles = {
         fontSize: '18px',
         fontWeight: 'bold',
         border: 'none',
+        borderRadius: '8px',
         cursor: 'pointer',
         position: 'absolute',
         bottom: 0,
