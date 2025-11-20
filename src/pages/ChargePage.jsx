@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from "uuid";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { styles} from "../styles/styles";
 import App from "../App";
 
 // V1 위젯 클라이언트 키
@@ -14,6 +15,7 @@ const API_BASE_URL = "http://localhost:8080";
 function ChargePage() {
     const navigate = useNavigate();
     const [amount, setAmount] = useState(''); // 문자열로 관리 (빈 값 처리 용이)
+
 
     // 금액 버튼 (+1만, +5만 등)
     const handleAddAmount = (val) => {
@@ -106,126 +108,126 @@ function ChargePage() {
 export default ChargePage;
 
 // 스크린샷과 유사하게 만들기 위한 CSS-in-JS 스타일 객체
-const styles = {
-    container: {
-        maxWidth: '480px',
-        margin: '0 auto',
-        minHeight: '100vh',
-        backgroundColor: '#fff',
-        position: 'relative',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    },
-    header: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '15px 20px',
-        height: '56px',
-    },
-    backButton: {
-        background: 'none',
-        border: 'none',
-        fontSize: '20px',
-        cursor: 'pointer',
-    },
-    headerTitle: {
-        fontSize: '18px',
-        fontWeight: '600',
-        margin: 0,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px',
-    },
-    headerRight: {
-        fontSize: '14px',
-        color: '#2AC1BC',
-        fontWeight: 'bold',
-        cursor: 'pointer',
-    },
-    content: {
-        padding: '20px',
-        paddingBottom: '100px', // 하단 고정 버튼을 위한 패딩
-    },
-    logoIcon: {
-        width: '32px',
-        height: '32px',
-        backgroundColor: '#00C73C',
-        borderRadius: '50%',
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 'bold',
-        marginRight: '8px',
-    },
-    inputWrapper: {
-        borderBottom: '2px solid #333',
-        paddingBottom: '10px',
-        display: 'flex',
-        alignItems: 'center',
-        marginBottom: '20px',
-    },
-    input: {
-        width: '100%',
-        border: 'none',
-        fontSize: '24px',
-        outline: 'none',
-        fontWeight: 'bold',
-        color: '#333',
-        '::placeholder': { color: '#ccc' },
-    },
-    currencyUnit: {
-        fontSize: '24px',
-        fontWeight: 'bold',
-        marginLeft: '5px',
-    },
-    buttonGrid: {
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr 1fr 1fr',
-        gap: '8px',
-    },
-    amountBtn: {
-        padding: '10px 0',
-        backgroundColor: '#fff',
-        border: '1px solid #ddd',
-        borderRadius: '4px',
-        fontSize: '14px',
-        color: '#333',
-        cursor: 'pointer',
-        fontWeight: '600',
-    },
-    accountBox: {
-        marginTop: '10px',
-        border: '1px solid #eee',
-        borderRadius: '8px',
-        padding: '15px',
-        display: 'flex',
-        alignItems: 'center',
-        cursor: 'pointer',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-    },
-    bankIcon: {
-        width: '40px',
-        height: '40px',
-        backgroundColor: '#FFE600',
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 'bold',
-        fontSize: '20px',
-        marginRight: '12px',
-    },
-    submitButton: {
-        width: '100%',
-        padding: '18px',
-        fontSize: '18px',
-        fontWeight: 'bold',
-        border: 'none',
-        borderRadius: '8px',
-        cursor: 'pointer',
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-    },
-};
+// const styles = {
+//     container: {
+//         maxWidth: '480px',
+//         margin: '0 auto',
+//         minHeight: '100vh',
+//         backgroundColor: '#fff',
+//         position: 'relative',
+//         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+//     },
+//     header: {
+//         display: 'flex',
+//         alignItems: 'center',
+//         justifyContent: 'space-between',
+//         padding: '15px 20px',
+//         height: '56px',
+//     },
+//     backButton: {
+//         background: 'none',
+//         border: 'none',
+//         fontSize: '20px',
+//         cursor: 'pointer',
+//     },
+//     headerTitle: {
+//         fontSize: '18px',
+//         fontWeight: '600',
+//         margin: 0,
+//         display: 'flex',
+//         alignItems: 'center',
+//         gap: '4px',
+//     },
+//     headerRight: {
+//         fontSize: '14px',
+//         color: '#2AC1BC',
+//         fontWeight: 'bold',
+//         cursor: 'pointer',
+//     },
+//     content: {
+//         padding: '20px',
+//         paddingBottom: '100px', // 하단 고정 버튼을 위한 패딩
+//     },
+//     logoIcon: {
+//         width: '32px',
+//         height: '32px',
+//         backgroundColor: '#00C73C',
+//         borderRadius: '50%',
+//         color: 'white',
+//         display: 'flex',
+//         alignItems: 'center',
+//         justifyContent: 'center',
+//         fontWeight: 'bold',
+//         marginRight: '8px',
+//     },
+//     inputWrapper: {
+//         borderBottom: '2px solid #333',
+//         paddingBottom: '10px',
+//         display: 'flex',
+//         alignItems: 'center',
+//         marginBottom: '20px',
+//     },
+//     input: {
+//         width: '100%',
+//         border: 'none',
+//         fontSize: '24px',
+//         outline: 'none',
+//         fontWeight: 'bold',
+//         color: '#333',
+//         '::placeholder': { color: '#ccc' },
+//     },
+//     currencyUnit: {
+//         fontSize: '24px',
+//         fontWeight: 'bold',
+//         marginLeft: '5px',
+//     },
+//     buttonGrid: {
+//         display: 'grid',
+//         gridTemplateColumns: '1fr 1fr 1fr 1fr',
+//         gap: '8px',
+//     },
+//     amountBtn: {
+//         padding: '10px 0',
+//         backgroundColor: '#fff',
+//         border: '1px solid #ddd',
+//         borderRadius: '4px',
+//         fontSize: '14px',
+//         color: '#333',
+//         cursor: 'pointer',
+//         fontWeight: '600',
+//     },
+//     accountBox: {
+//         marginTop: '10px',
+//         border: '1px solid #eee',
+//         borderRadius: '8px',
+//         padding: '15px',
+//         display: 'flex',
+//         alignItems: 'center',
+//         cursor: 'pointer',
+//         boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+//     },
+//     bankIcon: {
+//         width: '40px',
+//         height: '40px',
+//         backgroundColor: '#FFE600',
+//         borderRadius: '50%',
+//         display: 'flex',
+//         alignItems: 'center',
+//         justifyContent: 'center',
+//         fontWeight: 'bold',
+//         fontSize: '20px',
+//         marginRight: '12px',
+//     },
+//     submitButton: {
+//         width: '100%',
+//         padding: '18px',
+//         fontSize: '18px',
+//         fontWeight: 'bold',
+//         border: 'none',
+//         borderRadius: '8px',
+//         cursor: 'pointer',
+//         position: 'absolute',
+//         bottom: 0,
+//         left: 0,
+//     },
+// };
