@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../components/AuthContext';
 // import { USER_ROLES } from '../constants'; // 역할 상수
 
 // allowedRoles: null이면 로그인만 필요, 배열이면 역할까지 체크

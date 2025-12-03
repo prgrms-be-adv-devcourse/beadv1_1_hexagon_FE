@@ -93,7 +93,7 @@ export default function SuccessPage() {
         };
 
         requestPaymentConfirm();
-    }, [searchParams]);
+    }, [searchParams, navigate]);
 
     if (isLoading) {
         return (

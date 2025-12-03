@@ -91,7 +91,6 @@ export const AuthProvider = ({ children }) => {
         }
         setLoading(false);
     }, []);
-    
 
     return (
         <AuthContext.Provider value={{ authState, login, logout, updateToken, loading }}>
