@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {styles} from "../styles/signup";
 import axios from "axios";
+import { useAuth } from '../components/AuthContext';
 
 export default function SignUpPage() {
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     // 입력 데이터를 관리하는 State
     const [formData, setFormData] = useState({
@@ -95,7 +97,8 @@ export default function SignUpPage() {
             // -------------------------------------------------------
             // [Final] 토큰 저장 및 이동
             // -------------------------------------------------------
-            localStorage.setItem('accessToken', finalAccessToken);
+            // AuthContext의 login 함수를 사용하여 상태 업데이트 및 저장
+            login(finalAccessToken);
 
             alert('회원가입이 성공적으로 완료되었습니다!');
             navigate('/charge');
