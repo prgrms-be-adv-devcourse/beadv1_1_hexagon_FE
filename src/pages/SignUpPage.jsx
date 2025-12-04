@@ -97,7 +97,7 @@ export default function SignUpPage() {
             // -------------------------------------------------------
             // [Final] 토큰 저장 및 이동
             // -------------------------------------------------------
-            // AuthContext의 login 함수를 사용하여 상태 업데이트 및 저장
+            // [수정] AuthContext의 login 함수를 사용하여 상태 업데이트 및 저장
             login(finalAccessToken);
 
             alert('회원가입이 성공적으로 완료되었습니다!');
