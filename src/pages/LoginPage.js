@@ -1,14 +1,24 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../components/AuthContext';
 // 상위 폴더(src)의 styles.js에서 loginStyles 가져오기
 import { loginStyles} from "../styles/styles";
 
 export default function LoginPage() {
     const navigate = useNavigate();
+    const { authState, loading } = useAuth();
+
+    // [추가] 토큰 기반 리다이렉션 로직
+    useEffect(() => {
+        if (!loading && authState.isLoggedIn) {
+            // 이미 로그인 상태라면 메인 페이지로 이동 (예: /charge)
+            navigate('/charge', { replace: true });
+        }
+    }, [authState.isLoggedIn, loading, navigate]);
 
     const handleSocialLogin = (provider) => {
         const oauthUrls = {
-            // [수정 1] 주소가 서로 바뀌어 있어서 올바르게 매칭했습니다.
+            // 주소가 서로 바뀌어 있어서 올바르게 매칭했습니다.
             kakao: 'http://localhost:8000/oauth2/authorization/kakao',
             naver: 'http://localhost:8000/oauth2/authorization/naver',
             google: 'http://localhost:8000/oauth2/authorization/google',
@@ -17,10 +27,15 @@ export default function LoginPage() {
         const targetUrl = oauthUrls[provider];
 
         if (targetUrl) {
-            // [수정 2] 외부 URL(백엔드)로 이동할 때는 window.location.href를 사용합니다.
+            // 외부 URL(백엔드)로 이동할 때는 window.location.href를 사용합니다.
             window.location.href = targetUrl;
         }
     };
+
+    // [추가] 로딩 중이거나 이미 로그인 상태라면 아무것도 렌더링하지 않음
+    if (loading || authState.isLoggedIn) {
+        return <div style={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>로딩 중...</div>; 
+    }
 
     return (
         <div style={loginStyles.container}>
