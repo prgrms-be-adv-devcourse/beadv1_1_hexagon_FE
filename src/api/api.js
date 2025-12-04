@@ -53,11 +53,17 @@ instance.interceptors.response.use(
 
             // 재발급 요청(/api/auth/reissue) 자체가 401을 받으면 로그아웃 처리
             if (originalRequest.url === '/auth/reissue') {
-                // RefreshToken이 DB/Redis에 없어서 401 → 그때만 로그아웃
-                if (error.response?.data?.customErrorCode === 'UNAUTHORIZATION') {
-                    authService.logout(false);
+
+                // 백엔드에서 반환하는 customErrorCode 기준
+                const errorCode = error.response?.data?.customErrorCode;
+
+                // RefreshToken이 없거나 유효하지 않은 경우 → 로그아웃
+                if (errorCode === 'UNAUTHORIZATION') {
+                    authService.logout(false); 
+                } else {
+                    console.warn("재발급 실패했지만, refresh token 문제는 아님. (네트워크 이슈 가능)");
                 }
-                
+
                 return Promise.reject(error);
             }
             
