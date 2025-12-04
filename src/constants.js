@@ -6,7 +6,7 @@ export const CLAIMS = {
    // 백엔드 @Value("${jwt.claims.member-code}") 값과 일치해야 함
    MEMBER_CODE: "member-code", 
    // 백엔드 @Value("${jwt.claims.is-sign}") 값과 일치해야 함
-   IS_SIGNED_UP: "is-sign", 
+   IS_SIGNED_UP: "is-sign-up", 
    // 역할 클레임이 있다면 추가: ROLE: "role"
 }
 
