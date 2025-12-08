@@ -48,20 +48,18 @@ export const AuthProvider = ({ children }) => {
 
     // 로그아웃 처리 함수 (외부/내부 모두 사용 가능)
     const logout = async (callBackend = true) => {
-        // 1. 프론트엔드 상태 초기화 및 토큰 삭제
         localStorage.removeItem('accessToken');
         setAuthState(initialAuthState);
 
         if (callBackend) {
             try {
-                // 2. 백엔드 로그아웃 API 호출 (Refresh Token 무효화)
-                // Refresh Token이 HTTP Only Cookie로 전송되어 서버에서 삭제됩니다.
+                // 백엔드 로그아웃 API 호출 (Refresh Token 무효화)
+                // axios 인스턴스 import 후 사용 (Refresh Token은 쿠키로 자동 전송)
                 await instance.delete('/auth/logout'); 
             } catch (e) {
                 console.warn("Backend logout failed:", e);
             }
         }
-        // 3. 로그인 페이지로 리다이렉션
         navigate('/login', { replace: true });
     };
 
