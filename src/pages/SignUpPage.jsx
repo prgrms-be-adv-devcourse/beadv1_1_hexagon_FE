@@ -78,7 +78,6 @@ export default function SignUpPage() {
         ...axiosConfig,
         headers: {
           Authorization: `Bearer ${tempAccessToken}`,
-          "X-CODE": encodeURIComponent(rawMemberCode),
         },
       });
 

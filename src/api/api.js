@@ -30,18 +30,6 @@ instance.interceptors.request.use(
     if (token) {
       // 1. Bearer 토큰 주입
       config.headers.Authorization = `Bearer ${token}`;
-
-      try {
-        // 2. 토큰에서 memberCode 추출하여 X-CODE 헤더에 주입
-        const decodedToken = decode(token);
-        const memberCode = decodedToken.payload[CLAIMS.MEMBER_CODE];
-
-        if (memberCode) {
-          config.headers["X-CODE"] = memberCode;
-        }
-      } catch (e) {
-        console.error("X-CODE 주입 중 토큰 디코딩 실패:", e);
-      }
     }
     return config;
   },
