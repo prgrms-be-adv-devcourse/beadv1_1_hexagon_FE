@@ -69,7 +69,7 @@ instance.interceptors.response.use(
       }
 
       // 재발급 요청(/api/auth/reissue) 자체가 401을 받으면 로그아웃 처리
-      if (originalRequest.url === "/auth/reissue") {
+      if (originalRequest.url === "api/auth/reissue") {
         authService.logout(false);
         return Promise.reject(error);
       }

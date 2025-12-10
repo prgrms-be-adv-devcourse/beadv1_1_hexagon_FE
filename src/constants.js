@@ -1,5 +1,5 @@
 export const API_BASE_URL = "http://localhost:8000/api";
-export const REISSUE_URL = `${API_BASE_URL}/api/auth/reissue`;
+export const REISSUE_URL = "http://localhost:8000/api/auth/reissue";
 
 // JWT Access Token의 Claim Key 상수화 (백엔드 JwtProperties와 일치해야 함)
 export const CLAIMS = {

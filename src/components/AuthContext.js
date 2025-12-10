@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }) => {
   // 외부 참조 변수 초기화 (Hook 규칙을 준수하며 외부에 함수 제공)
   useEffect(() => {
     externalAuth = { logout, updateToken };
-  }, []);
+  }, [logout, updateToken]);
 
   // 컴포넌트 마운트 시 초기 토큰 상태 확인
   useEffect(() => {
