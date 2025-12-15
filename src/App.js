@@ -24,6 +24,8 @@ import MyCommissionsPage from "./pages/commisions/MyCommissionsPage";
 import MyContractsPage from "./pages/contract/MyContractsPage";
 import MyProfilePage from "./pages/member/MyProfilePage";
 import PaymentHistoryPage from "./pages/payment/PaymentHistoryPage";
+import DepositHistoryPage from "./pages/deposit/DepositHistoryPage";
+import DepositPage from "./pages/deposit/DepositPage";
 import ResumeListPage from "./pages/resume/ResumeListPage";
 import SellerRegisterPage from "./pages/member/SellerRegisterPage";
 import SelfPromotionUpsertPage from "./pages/selfPromotion/SelfPromotionUpsertPage"; // Create/Update 공용
@@ -87,6 +89,11 @@ function App() {
                 <Route
                   path="/mypage/payments"
                   element={<PaymentHistoryPage />}
+                />
+                <Route path="/mypage/deposits" element={<DepositPage />} />
+                <Route
+                  path="/mypage/deposits/histories"
+                  element={<DepositHistoryPage />}
                 />
                 <Route path="/mypage/tags" element={<TagManagementPage />} />
                 <Route path="/mypage/resumes" element={<ResumeListPage />} />
