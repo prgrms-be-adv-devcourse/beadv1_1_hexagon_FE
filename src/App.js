@@ -29,6 +29,8 @@ import SellerRegisterPage from "./pages/member/SellerRegisterPage";
 import SelfPromotionUpsertPage from "./pages/selfPromotion/SelfPromotionUpsertPage"; // Create/Update 공용
 import TagManagementPage from "./pages/tag/TagManagementPage";
 import MemberRatingPage from "./pages/rating/MemberRatingPage"; // 다른 회원 평가도 로그인 후 가능
+import MemberRatingPage from "./pages/rating/MemberRatingPage";
+import ContractDetailPage from "./pages/contract/ContractDetailPage";
 
 function App() {
   return (
@@ -84,6 +86,7 @@ function App() {
                   element={<MyCommissionsPage />}
                 />
                 <Route path="/mypage/contracts" element={<MyContractsPage />} />
+                <Route path="/mypage/contracts/:code" element={<ContractDetailPage />} />
                 <Route
                   path="/mypage/payments"
                   element={<PaymentHistoryPage />}
