@@ -24,11 +24,14 @@ import MyCommissionsPage from "./pages/commisions/MyCommissionsPage";
 import MyContractsPage from "./pages/contract/MyContractsPage";
 import MyProfilePage from "./pages/member/MyProfilePage";
 import PaymentHistoryPage from "./pages/payment/PaymentHistoryPage";
+import DepositHistoryPage from "./pages/deposit/DepositHistoryPage";
+import DepositPage from "./pages/deposit/DepositPage";
 import ResumeListPage from "./pages/resume/ResumeListPage";
 import SellerRegisterPage from "./pages/member/SellerRegisterPage";
 import SelfPromotionUpsertPage from "./pages/selfPromotion/SelfPromotionUpsertPage"; // Create/Update 공용
 import TagManagementPage from "./pages/tag/TagManagementPage";
-import MemberRatingPage from "./pages/rating/MemberRatingPage"; // 다른 회원 평가도 로그인 후 가능
+import MemberRatingPage from "./pages/rating/MemberRatingPage";
+import LoginSuccessPage from "./pages/LoginSuccessPage"; // 다른 회원 평가도 로그인 후 가능
 
 function App() {
   return (
@@ -48,6 +51,7 @@ function App() {
               />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/login/need-signed-up" element={<SignUpPage />} />
+              <Route path="/login/success" element={<LoginSuccessPage />} />
               <Route path="/fail" element={<FailPage />} />
               <Route
                 path="/search/commissions"
@@ -87,6 +91,11 @@ function App() {
                 <Route
                   path="/mypage/payments"
                   element={<PaymentHistoryPage />}
+                />
+                <Route path="/mypage/deposits" element={<DepositPage />} />
+                <Route
+                  path="/mypage/deposits/histories"
+                  element={<DepositHistoryPage />}
                 />
                 <Route path="/mypage/tags" element={<TagManagementPage />} />
                 <Route path="/mypage/resumes" element={<ResumeListPage />} />
