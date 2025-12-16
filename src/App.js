@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./components/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Footer from "./components/Footer";
+import Header from "./components/Header";
 
 // Public Pages (로그인 없이 접근 가능)
 import LoginPage from "./pages/LoginPage";
@@ -31,13 +32,16 @@ import SellerRegisterPage from "./pages/member/SellerRegisterPage";
 import SelfPromotionUpsertPage from "./pages/selfPromotion/SelfPromotionUpsertPage"; // Create/Update 공용
 import TagManagementPage from "./pages/tag/TagManagementPage";
 import MemberRatingPage from "./pages/rating/MemberRatingPage";
-import LoginSuccessPage from "./pages/LoginSuccessPage"; // 다른 회원 평가도 로그인 후 가능
+import LoginSuccessPage from "./pages/LoginSuccessPage";
+import MyPage from "./pages/member/MyPage";
+import UserPage from "./pages/member/UserPage"; // 다른 회원 평가도 로그인 후 가능
 
 function App() {
   return (
     <BrowserRouter>
       <div className="flex flex-col min-h-screen">
         <AuthProvider>
+          <Header />
           <div className="flex-grow">
             <Routes>
               {/* Public Routes: 로그인 불필요 */}
@@ -49,6 +53,7 @@ function App() {
                   </p>
                 }
               />
+              <Route path="/member" element={<UserPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/login/need-signed-up" element={<SignUpPage />} />
               <Route path="/login/success" element={<LoginSuccessPage />} />
@@ -82,6 +87,7 @@ function App() {
 
                 {/* 마이페이지/관리 영역 */}
                 <Route path="/cart" element={<CartPage />} />
+                <Route path="/mypage" element={<MyPage />} />
                 <Route path="/mypage/profile" element={<MyProfilePage />} />
                 <Route
                   path="/mypage/commissions/own"
