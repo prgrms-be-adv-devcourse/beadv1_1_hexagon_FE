@@ -21,11 +21,7 @@ const DepositPage = () => {
         token = token.replace("Bearer ", "");
       }
 
-      const res = await api.get("/deposits", {
-        headers: {
-          "X-CODE": token,
-        },
-      });
+      const res = await api.get("/deposits", {});
 
       // 응답 스키마: { code, httpStatus, message, data: { amount } }
       const value = res?.data?.data?.amount;

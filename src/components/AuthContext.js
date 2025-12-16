@@ -2,7 +2,15 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { decode } from "jwt-js-decode";
 import instance from "../api/api";
-import { CLAIMS } from "../constants";
+
+// JWT Access Token의 Claim Key 상수화 (백엔드 JwtProperties와 일치해야 함)
+const CLAIMS = {
+  // 백엔드 @Value("${jwt.claims.member-code}") 값과 일치해야 함
+  MEMBER_CODE: "member-code",
+  // 백엔드 @Value("${jwt.claims.is-sign}") 값과 일치해야 함
+  IS_SIGNED_UP: "is-signed-up",
+  // 역할 클레임이 있다면 추가: ROLE: "role"
+};
 
 // 외부 참조용 변수
 let externalAuth = null;

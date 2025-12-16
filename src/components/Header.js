@@ -47,7 +47,7 @@ const Header = () => {
   }, [isLoggedIn]);
 
   return (
-    <header className="bg-slate-900 text-slate-300 py-4 px-6">
+    <header className="fixed top-0 left-0 w-full bg-slate-900 text-slate-300 py-5 px-6 z-10">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
         {/* 1. 로고 */}
         <div className="flex items-center gap-4 font-medium">

@@ -10,6 +10,7 @@
     "@tosspayments/payment-widget-sdk": "^0.12.1",
     "axios": "^1.6.8",
     "jwt-js-decode": "^1.9.0",
+    "lucide-react": "^0.561.0",
     "path-browserify": "^1.0.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

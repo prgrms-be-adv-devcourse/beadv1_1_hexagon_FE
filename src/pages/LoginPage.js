@@ -3,15 +3,17 @@ import { useNavigate } from "react-router-dom";
 // 상위 폴더(src)의 styles.js에서 loginStyles 가져오기
 import { loginStyles } from "../styles/styles";
 
+const EC2_DOMAIN = process.env.REACT_APP_EC2_DOMAIN;
+
 export default function LoginPage() {
   const navigate = useNavigate();
 
   const handleSocialLogin = (provider) => {
     const oauthUrls = {
       // [수정 1] 주소가 서로 바뀌어 있어서 올바르게 매칭했습니다.
-      kakao: "http://localhost:8000/oauth2/authorization/kakao",
-      naver: "http://localhost:8000/oauth2/authorization/naver",
-      google: "http://localhost:8000/oauth2/authorization/google",
+      kakao: `${EC2_DOMAIN}/oauth2/authorization/kakao`,
+      naver: `${EC2_DOMAIN}/oauth2/authorization/naver`,
+      google: `${EC2_DOMAIN}/oauth2/authorization/google`,
     };
 
     const targetUrl = oauthUrls[provider];
@@ -24,10 +26,6 @@ export default function LoginPage() {
 
   return (
     <div style={loginStyles.container}>
-      <header style={loginStyles.header}>
-        <span style={loginStyles.headerLogo}>이어드림</span>
-      </header>
-
       <main style={loginStyles.mainContent}>
         <div style={loginStyles.titleSection}>
           <h1 style={loginStyles.mainLogo}>이어드림</h1>
@@ -89,15 +87,6 @@ export default function LoginPage() {
             </div>
             <span style={loginStyles.buttonText}>구글로 시작하기</span>
           </button>
-        </div>
-
-        <div style={loginStyles.footerLink}>
-          <span
-            onClick={() => alert("이메일 로그인")}
-            style={{ cursor: "pointer" }}
-          >
-            이메일로 시작하기 &gt;
-          </span>
         </div>
       </main>
     </div>

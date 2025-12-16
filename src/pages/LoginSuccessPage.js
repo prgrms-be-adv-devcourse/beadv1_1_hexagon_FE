@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../components/AuthContext";
-import { REISSUE_URL } from "../constants";
+
+const EC2_DOMAIN = process.env.REACT_APP_EC2_DOMAIN;
+const REISSUE_URL = process.env.REACT_APP_REISSUE_URL;
 
 const LoginSuccessPage = () => {
   const navigate = useNavigate();
@@ -14,23 +16,23 @@ const LoginSuccessPage = () => {
       try {
         // Show loading state
         console.log("Requesting new access token...");
-        
+
         // Make POST request to /reissue endpoint
         const response = await axios.post(REISSUE_URL, {}, { withCredentials: true });
-        
+
         // Extract the new access token from the response header
         const newAccessToken = response.headers["authorization"]?.replace("Bearer ", "");
-        
+
         if (!newAccessToken) {
           throw new Error("No access token received from server");
         }
-        
+
         console.log("Successfully received new access token");
-        
+
         // Remove old access token and store the new one
         localStorage.removeItem("accessToken");
         updateToken(newAccessToken);
-        
+
         // Redirect to root page
         navigate("/", { replace: true });
       } catch (err) {

@@ -35,7 +35,8 @@ import MemberRatingPage from "./pages/rating/MemberRatingPage"; // 다른 회원
 import ContractDetailPage from "./pages/contract/ContractDetailPage";
 import LoginSuccessPage from "./pages/LoginSuccessPage";
 import MyPage from "./pages/member/MyPage";
-import UserPage from "./pages/member/UserPage"; // 다른 회원 평가도 로그인 후 가능
+import UserPage from "./pages/member/UserPage";
+import LandingPage from "./pages/LandingPage"; // 다른 회원 평가도 로그인 후 가능
 
 
 function App() {
@@ -44,17 +45,10 @@ function App() {
       <div className="flex flex-col min-h-screen">
         <AuthProvider>
           <Header />
-          <div className="flex-grow">
+          <div className="flex-grow pt-16">
             <Routes>
               {/* Public Routes: 로그인 불필요 */}
-              <Route
-                path="/"
-                element={
-                  <p style={{ padding: "20px" }}>
-                    홈 페이지 (나중에 /charge 또는 /search로 리다이렉트)
-                  </p>
-                }
-              />
+              <Route path="/" element={<LandingPage />} />
               <Route path="/member" element={<UserPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/login/need-signed-up" element={<SignUpPage />} />

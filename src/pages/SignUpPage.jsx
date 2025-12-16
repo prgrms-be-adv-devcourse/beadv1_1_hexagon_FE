@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { styles } from "../styles/signup";
-import axios from "axios";
 import { useAuth } from "../components/AuthContext";
+import api from "../api/api";
+import axios from "axios";
+
+const EC2_DOMAIN = process.env.REACT_APP_EC2_DOMAIN;
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -40,18 +43,19 @@ export default function SignUpPage() {
       return;
     }
 
-    const TOKEN_URL = "http://localhost:8000/api/auth/reissue";
-    const SIGNUP_URL = "http://localhost:8000/api/members";
-
-    const axiosConfig = {
-      withCredentials: true, // 쿠키 자동 전송
-    };
+    // API instance already has the base URL and withCredentials configured
 
     try {
       // -------------------------------------------------------
       // [Step 1] 쿠키 전송 -> 헤더에서 임시 AccessToken 추출
       // -------------------------------------------------------
-      const res1 = await axios.post(TOKEN_URL, {}, axiosConfig);
+      const res1 = await axios.post(
+          `${EC2_DOMAIN}/api/auth/reissue`,
+          {},
+          {
+            withCredentials: true, // 쿠키 포함
+          }
+      );
       const authHeader = res1.headers["authorization"];
 
       if (!authHeader) {
@@ -74,8 +78,9 @@ export default function SignUpPage() {
       // -------------------------------------------------------
       // [Step 3] 회원가입 정보 + 임시 AccessToken(Header) 전송
       // -------------------------------------------------------
-      await axios.post(SIGNUP_URL, formData, {
-        ...axiosConfig,
+      await axios.post(
+          `${EC2_DOMAIN}/api/members`,
+          formData, {
         headers: {
           Authorization: `Bearer ${tempAccessToken}`,
         },
@@ -86,7 +91,7 @@ export default function SignUpPage() {
       // -------------------------------------------------------
       // [Step 4] 쿠키 재전송 -> 헤더에서 정식 AccessToken 추출
       // -------------------------------------------------------
-      const res3 = await axios.post(TOKEN_URL, {}, axiosConfig);
+      const res3 = await api.post("/auth/reissue", {});
 
       // 마찬가지로 소문자 키로 접근
       const finalAuthHeader = res3.headers["authorization"];
