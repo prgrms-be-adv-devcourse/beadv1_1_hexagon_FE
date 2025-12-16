@@ -33,7 +33,6 @@ import SelfPromotionUpsertPage from "./pages/selfPromotion/SelfPromotionUpsertPa
 import TagManagementPage from "./pages/tag/TagManagementPage";
 import MemberRatingPage from "./pages/rating/MemberRatingPage"; // 다른 회원 평가도 로그인 후 가능
 import ContractDetailPage from "./pages/contract/ContractDetailPage";
-import MemberRatingPage from "./pages/rating/MemberRatingPage";
 import LoginSuccessPage from "./pages/LoginSuccessPage";
 import MyPage from "./pages/member/MyPage";
 import UserPage from "./pages/member/UserPage"; // 다른 회원 평가도 로그인 후 가능
