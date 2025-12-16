@@ -57,10 +57,14 @@ instance.interceptors.response.use(
       }
 
       // 재발급 요청(/api/auth/reissue) 자체가 401을 받으면 로그아웃 처리
-      if (originalRequest.url === "/api/auth/reissue") {
-        if (error.response?.data?.customErrorCode === "UNAUTHORIZATION") {
-          authService.logout(false);
-        }
+      if (originalRequest.url === "/api/auth/reissue" &&&
+        error.response?.status === 401
+      ) {
+        console.error(
+          "❌ [Reissue 401] Refresh Token 만료. 자동 로그아웃을 시작합니다."
+        );
+        // 로그아웃 처리
+        authService.logout(false);
         return Promise.reject(error);
       }
 
