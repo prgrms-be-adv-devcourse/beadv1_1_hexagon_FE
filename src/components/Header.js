@@ -34,7 +34,7 @@ const Header = () => {
       setLoading(true);
       const fetchProfile = async () => {
         try {
-          const response = await api.get("http://localhost:8000/api/members/me");
+          const response = await api.get("/members/me");
           setProfile(response.data.data.info);
         } catch (error) {
           console.error("프로필 정보 조회 실패:", error);
@@ -103,12 +103,6 @@ const Header = () => {
                 className="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded transition-colors"
               >
                 로그인
-              </Link>
-              <Link
-                to="/login/need-signed-up"
-                className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition-colors"
-              >
-                회원가입
               </Link>
             </>
           )}
