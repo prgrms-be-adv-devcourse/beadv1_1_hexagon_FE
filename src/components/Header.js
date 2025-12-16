@@ -1,0 +1,115 @@
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "./AuthContext";
+import api from "../api/api";
+
+const Header = () => {
+  const { authState, logout } = useAuth();
+  const { isLoggedIn } = authState;
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      // Call the backend logout endpoint
+      const response = await api.delete("auth/logout");
+
+      // If successful, remove the accessToken
+      if (response.status === 200) {
+        localStorage.removeItem("accessToken");
+        // Update auth state
+        logout(false); // Pass false to avoid calling the backend again
+        // Redirect to front page
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("로그아웃 실패:", error);
+    }
+  };
+
+  useEffect(() => {
+    // Only fetch profile if user is logged in
+    if (isLoggedIn) {
+      setLoading(true);
+      const fetchProfile = async () => {
+        try {
+          const response = await api.get("/members/me");
+          setProfile(response.data.data.info);
+        } catch (error) {
+          console.error("프로필 정보 조회 실패:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchProfile();
+    }
+  }, [isLoggedIn]);
+
+  return (
+    <header className="bg-slate-900 text-slate-300 py-4 px-6">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
+        {/* 1. 로고 */}
+        <div className="flex items-center gap-4 font-medium">
+          <Link to="/" className="text-white font-bold text-lg mr-2">
+            이어드림
+          </Link>
+        </div>
+
+        {/* 2. 가로 메뉴 (주요 링크) */}
+        <nav className="flex items-center gap-6">
+          <Link
+            to="/search/commissions"
+            className="hover:text-white transition-colors"
+          >
+            의뢰 찾기
+          </Link>
+          <Link
+            to="/search/promotions"
+            className="hover:text-white transition-colors"
+          >
+            홍보글 찾기
+          </Link>
+        </nav>
+
+        {/* 3. 로그인/회원가입 또는 사용자 정보 */}
+        <div className="flex items-center gap-4">
+          {isLoggedIn ? (
+            <>
+              {loading ? (
+                <span className="text-slate-400">로딩 중...</span>
+              ) : (
+                <Link to="/mypage" className="hover:text-white transition-colors">
+                  {profile?.nickName || "사용자"}님
+                </Link>
+              )}
+              <Link
+                to="/mypage"
+                className="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded transition-colors"
+              >
+                마이페이지
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition-colors"
+              >
+                로그아웃
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded transition-colors"
+              >
+                로그인
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;
