@@ -28,19 +28,12 @@ const ContractDetailPage = () => {
   const [error, setError] = useState(null);
   const [cancelLoading, setCancelLoading] = useState(false);
 
-  const getXCodeHeader = () => {
-    let token = localStorage.getItem('accessToken');
-    if (token && token.startsWith('Bearer ')) token = token.replace('Bearer ', '');
-    return token ? { 'X-CODE': token } : {};
-  };
 
   const fetchDetail = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get(`/contracts/${code}`, {
-        headers: { ...getXCodeHeader() },
-      });
+      const res = await api.get(`/contracts/${code}`);
       const payload = res?.data?.data ?? {};
       setDetail(payload);
     } catch (e) {
@@ -60,7 +53,6 @@ const ContractDetailPage = () => {
     setCancelLoading(true);
     try {
       const res = await api.post(`/contracts/${code}/cancel`, {}, {
-        headers: { ...getXCodeHeader() },
         validateStatus: () => true, // 수동 처리
       });
       if (res.status >= 200 && res.status < 300) {

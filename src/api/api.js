@@ -1,7 +1,6 @@
 import axios from "axios";
-import { getAuthService, AuthProvider } from "../components/AuthContext"; // Hook이 아닌 함수 참조
+import { getAuthService } from "../components/AuthContext"; // Hook이 아닌 함수 참조
 import { API_BASE_URL, REISSUE_URL, CLAIMS } from "../constants";
-import { decode } from "jwt-js-decode";
 
 const instance = axios.create({
   baseURL: API_BASE_URL,
@@ -57,7 +56,7 @@ instance.interceptors.response.use(
       }
 
       // 재발급 요청(/api/auth/reissue) 자체가 401을 받으면 로그아웃 처리
-      if (originalRequest.url === "/api/auth/reissue" &&&
+      if (originalRequest.url === "/api/auth/reissue" &&
         error.response?.status === 401
       ) {
         console.error(

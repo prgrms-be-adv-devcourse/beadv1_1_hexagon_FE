@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import api from "../api/api";
+import Sidebar from "./Sidebar";
 
 const Header = () => {
   const { authState, logout } = useAuth();
@@ -9,6 +10,8 @@ const Header = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const toggleSidebar = () => setSidebarOpen((v) => !v);
 
   const handleLogout = async () => {
     try {
@@ -47,68 +50,67 @@ const Header = () => {
   }, [isLoggedIn]);
 
   return (
-    <header className="bg-slate-900 text-slate-300 py-4 px-6">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
-        {/* 1. 로고 */}
-        <div className="flex items-center gap-4 font-medium">
-          <Link to="/" className="text-white font-bold text-lg mr-2">
-            이어드림
-          </Link>
-        </div>
+    <>
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <header className="bg-slate-900 text-slate-300 py-4 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
+          {/* 1. 좌측: 햄버거 + 로고 */}
+          <div className="flex items-center gap-2 font-medium">
+            <button
+              onClick={toggleSidebar}
+              aria-label="사이드바 열기"
+              className="mr-2 p-2 rounded hover:bg-slate-800 text-white"
+            >
+              {/* 햄버거 아이콘 */}
+              <span className="block w-5 h-0.5 bg-current mb-1" />
+              <span className="block w-5 h-0.5 bg-current mb-1" />
+              <span className="block w-5 h-0.5 bg-current" />
+            </button>
+            <Link to="/" className="text-white font-bold text-lg mr-2">
+              이어드림
+            </Link>
+          </div>
 
-        {/* 2. 가로 메뉴 (주요 링크) */}
-        <nav className="flex items-center gap-6">
-          <Link
-            to="/search/commissions"
-            className="hover:text-white transition-colors"
-          >
-            의뢰 찾기
-          </Link>
-          <Link
-            to="/search/promotions"
-            className="hover:text-white transition-colors"
-          >
-            홍보글 찾기
-          </Link>
-        </nav>
+          {/* 2. 가로 메뉴 제거 (요청에 따라 헤더에서 검색 링크 숨김) */}
 
-        {/* 3. 로그인/회원가입 또는 사용자 정보 */}
-        <div className="flex items-center gap-4">
-          {isLoggedIn ? (
-            <>
-              {loading ? (
-                <span className="text-slate-400">로딩 중...</span>
-              ) : (
-                <Link to="/mypage" className="hover:text-white transition-colors">
-                  {profile?.nickName || "사용자"}님
+          {/* 3. 로그인/회원가입 또는 사용자 정보 */}
+          <div className="flex items-center gap-4">
+            {isLoggedIn ? (
+              <>
+                {loading ? (
+                  <span className="text-slate-400">로딩 중...</span>
+                ) : (
+                  <Link to="/mypage" className="hover:text-white transition-colors">
+                    {profile?.nickName || "사용자"}님
+                  </Link>
+                )}
+                <Link
+                  to="/mypage"
+                  className="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded transition-colors"
+                >
+                  마이페이지
                 </Link>
-              )}
-              <Link
-                to="/mypage"
-                className="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded transition-colors"
-              >
-                마이페이지
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition-colors"
-              >
-                로그아웃
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded transition-colors"
-              >
-                로그인
-              </Link>
-            </>
-          )}
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition-colors"
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded transition-colors"
+                >
+                  로그인
+                </Link>
+              </>
+            )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </>
   );
 };
 

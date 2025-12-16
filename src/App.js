@@ -36,6 +36,7 @@ import ContractDetailPage from "./pages/contract/ContractDetailPage";
 import LoginSuccessPage from "./pages/LoginSuccessPage";
 import MyPage from "./pages/member/MyPage";
 import UserPage from "./pages/member/UserPage"; // 다른 회원 평가도 로그인 후 가능
+import ChatListPage from "./pages/chat/ChatListPage";
 
 
 function App() {
@@ -75,6 +76,8 @@ function App() {
                 <Route path="/charge" element={<ChargePage />} />
                 <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/success" element={<SuccessPage />} />
+                {/* 채팅 */}
+                <Route path="/chat" element={<ChatListPage />} />
 
                 {/* 의뢰글 등록/수정 (CommissionUpsertPage는 action props를 받아야 함) */}
                 {/* Action props 전달을 위해 래핑 컴포넌트 사용 또는 페이지 내부에서 파싱 */}

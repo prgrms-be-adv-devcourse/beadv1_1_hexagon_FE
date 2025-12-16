@@ -36,25 +36,17 @@ const MyContractsPage = () => {
 
   // 정렬(order) 상태: 기본 최신순(DESC)
   const [order, setOrder] = useState('DESC');
-
-  const orderLabel = useMemo(() => ORDER_OPTIONS.find(o => o.value === order)?.label || '최신순', [order]);
-
+  useMemo(() => ORDER_OPTIONS.find(o => o.value === order)?.label || '최신순', [order]);
   const fetchContracts = async ({ append } = { append: true }) => {
     setLoading(true);
     setError(null);
     try {
-      // X-CODE 헤더에 JWT 토큰 주입 (localStorage 저장값 사용)
-      let token = localStorage.getItem('accessToken');
-      if (token && token.startsWith('Bearer ')) {
-        token = token.replace('Bearer ', '');
-      }
       const res = await api.get('/contracts', {
         params: {
           'cursor-date': append ? cursorDate : null,
           'cursor-code': append ? cursorCode : null,
           order,
-        },
-        headers: token ? { 'X-CODE': token } : undefined,
+        }
       });
 
       // [DEBUG] 응답 구조 로깅 (개발 중 확인용)
