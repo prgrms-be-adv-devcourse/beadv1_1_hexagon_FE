@@ -35,7 +35,8 @@ import MemberRatingPage from "./pages/rating/MemberRatingPage"; // 다른 회원
 import ContractDetailPage from "./pages/contract/ContractDetailPage";
 import LoginSuccessPage from "./pages/LoginSuccessPage";
 import MyPage from "./pages/member/MyPage";
-import UserPage from "./pages/member/UserPage"; // 다른 회원 평가도 로그인 후 가능
+import UserPage from "./pages/member/UserPage";
+import MemberUpdatePage from "./pages/member/MemberUpdatePage"; // 다른 회원 평가도 로그인 후 가능
 
 
 function App() {
@@ -90,6 +91,7 @@ function App() {
                 {/* 마이페이지/관리 영역 */}
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/mypage" element={<MyPage />} />
+                <Route path="/mypage/update" element={<MemberUpdatePage />}/>
                 <Route path="/mypage/profile" element={<MyProfilePage />} />
                 <Route
                   path="/mypage/commissions/own"
