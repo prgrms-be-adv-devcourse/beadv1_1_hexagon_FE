@@ -29,6 +29,12 @@ const Footer = () => {
           <Link to="/charge" className="hover:text-white transition-colors">
             포인트 충전
           </Link>
+          <Link to="/mypage/deposits" className="hover:text-white transition-colors">
+            내 포인트 조회
+          </Link>
+          <Link to="/mypage/contracts" className="hover:text-white transition-colors">
+            계약 목록
+          </Link>
           <Link to="/cart" className="hover:text-white transition-colors">
             장바구니
           </Link>
