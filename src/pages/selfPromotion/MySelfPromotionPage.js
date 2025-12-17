@@ -1,19 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import api from "../../api/api";
+import axios from "axios"; // 파일 직접 전송을 위해 axios 기본 객체 사용
 
 const MyPromotionPage = () => {
   const [promotion, setPromotion] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-
-  // 1. 내 이력서 목록을 저장할 상태 추가
   const [myResumes, setMyResumes] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     paymentType: "PER_JOB",
     unitAmount: 0,
-    resumeCode: "", // 여기에 선택한 이력서 코드가 들어갑니다.
+    resumeCode: "",
+    pdfKey: "", // 서버에 저장할 S3 Key
   });
 
   const getXCodeHeader = () => {
@@ -23,22 +24,63 @@ const MyPromotionPage = () => {
     return token ? { "X-CODE": token } : {};
   };
 
-  // 2. 이력서 목록 불러오기 함수
-  const fetchMyResumes = async () => {
+  // 1. S3 Pre-signed URL을 이용한 파일 업로드 로직
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      alert("PDF 파일만 업로드 가능합니다.");
+      return;
+    }
+
+    setUploading(true);
     try {
-      // 본인의 전체 이력서 목록을 가져오는 API (백엔드에 맞춰 조정 가능)
+      // (1) 서버에 업로드용 Pre-signed URL 요청
+      // 백엔드 스펙: serviceName(ENUM), fileName, contentType 필요
+      const urlRes = await api.post(
+        "/s3/upload-url",
+        {
+          serviceName: "SELF_PROMOTIONS", // 백엔드 ServiceName ENUM 확인 필요
+          fileName: file.name,
+          contentType: file.type,
+        },
+        { headers: getXCodeHeader() }
+      );
+
+      const { uploadUrl, fileKey } = urlRes.data.data;
+
+      // (2) 발급받은 URL로 S3에 직접 파일 전송 (Axios 사용)
+      // 주의: Pre-signed URL 업로드는 보통 PUT 방식을 사용합니다.
+      await axios.put(uploadUrl, file, {
+        headers: { "Content-Type": file.type },
+      });
+
+      // (3) 업로드 성공 시 fileKey를 formData에 저장
+      setFormData((prev) => ({ ...prev, pdfKey: fileKey }));
+      alert("파일 업로드가 완료되었습니다.");
+    } catch (e) {
+      console.error(e);
+      alert("파일 업로드 중 오류가 발생했습니다.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // 2. 데이터 페칭 로직 (이전과 동일)
+  const fetchMyResumes = useCallback(async () => {
+    try {
       const res = await api.get("/resumes/me", { headers: getXCodeHeader() });
-      // 만약 단건 조회라면 배열로 감싸주고, 목록 조회라면 그대로 저장
       const data = Array.isArray(res.data.data)
         ? res.data.data
         : [res.data.data];
       setMyResumes(data.filter((r) => r !== null));
     } catch (e) {
-      console.log("이력서 목록 로드 실패");
+      console.log("이력서 로드 실패");
     }
-  };
+  }, []);
 
-  const fetchPromotion = () => {
+  const fetchPromotion = useCallback(() => {
     api
       .get("/self-promotions/me", { headers: getXCodeHeader() })
       .then((res) => {
@@ -50,40 +92,38 @@ const MyPromotionPage = () => {
             paymentType: res.data.data.paymentType,
             unitAmount: res.data.data.unitAmount,
             resumeCode: res.data.data.resumeCode || "",
+            pdfKey: res.data.data.pdfKey || "",
           });
         }
       })
       .catch(() => setPromotion(null));
-  };
+  }, []);
 
   useEffect(() => {
     fetchPromotion();
-    fetchMyResumes(); // 페이지 로드 시 이력서 목록도 가져옴
-  }, []);
+    fetchMyResumes();
+  }, [fetchPromotion, fetchMyResumes]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // resumeCode가 빈 문자열이면 null로 처리해서 전송
       const payload = { ...formData, resumeCode: formData.resumeCode || null };
-
       if (promotion) {
         await api.patch(
           `/self-promotions/${promotion.promotionCode}`,
           payload,
           { headers: getXCodeHeader() }
         );
-        alert("홍보글이 수정되었습니다!");
       } else {
         await api.post("/self-promotions", payload, {
           headers: getXCodeHeader(),
         });
-        alert("홍보글이 게시되었습니다!");
       }
+      alert("저장 완료!");
       setIsEditing(false);
       fetchPromotion();
     } catch (e) {
-      alert("처리 실패: " + (e.response?.data?.message || "오류 발생"));
+      alert("저장 실패");
     }
   };
 
@@ -94,15 +134,15 @@ const MyPromotionPage = () => {
       {isEditing ? (
         <form
           onSubmit={handleSubmit}
-          className="bg-white p-8 rounded-2xl shadow-xl border border-indigo-50 space-y-6"
+          className="bg-white p-8 rounded-2xl shadow-xl space-y-6"
         >
-          {/* --- 이력서 선택 섹션 추가 --- */}
-          <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-            <label className="block text-sm font-bold text-indigo-700 mb-2">
+          {/* 이력서 선택 */}
+          <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 font-semibold">
+            <label className="block text-sm font-bold text-indigo-700 mb-2 font-semibold">
               연결할 이력서 선택
             </label>
             <select
-              className="w-full p-3 border rounded-lg bg-white outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full p-3 border rounded-lg bg-white outline-none"
               value={formData.resumeCode}
               onChange={(e) =>
                 setFormData({ ...formData, resumeCode: e.target.value })
@@ -111,17 +151,13 @@ const MyPromotionPage = () => {
               <option value="">연결 안 함 (선택 사항)</option>
               {myResumes.map((r) => (
                 <option key={r.resumeCode} value={r.resumeCode}>
-                  {r.title} (작성일:{" "}
-                  {new Date(r.createdAt).toLocaleDateString()})
+                  {r.title}
                 </option>
               ))}
             </select>
-            <p className="text-xs text-indigo-400 mt-2">
-              * 이력서를 연결하면 클라이언트가 내 경력을 더 자세히 볼 수
-              있습니다.
-            </p>
           </div>
 
+          {/* 제목/방식/금액/내용 (기존 코드와 동일) */}
           <div>
             <label className="block text-sm font-semibold text-gray-600 mb-2">
               홍보 제목
@@ -153,7 +189,7 @@ const MyPromotionPage = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">
+              <label className="block text-sm font-semibold text-gray-600 mb-2 font-semibold">
                 단위 금액 (원)
               </label>
               <input
@@ -171,8 +207,31 @@ const MyPromotionPage = () => {
             </div>
           </div>
 
+          {/* PDF 업로드 추가 */}
+          <div className="p-4 border-2 border-dashed border-gray-200 rounded-xl">
+            <label className="block text-sm font-bold text-gray-600 mb-2 font-semibold font-semibold">
+              포트폴리오 PDF (선택사항)
+            </label>
+            <input
+              type="file"
+              accept=".pdf"
+              onChange={handleFileUpload}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-50 file:text-indigo-700"
+            />
+            {uploading && (
+              <p className="text-xs text-blue-500 mt-2 font-semibold">
+                S3 서버로 파일 전송 중...
+              </p>
+            )}
+            {formData.pdfKey && (
+              <p className="text-xs text-green-600 mt-2 font-bold font-semibold">
+                ✓ 파일 준비됨: {formData.pdfKey.split("/").pop()}
+              </p>
+            )}
+          </div>
+
           <div>
-            <label className="block text-sm font-semibold text-gray-600 mb-2">
+            <label className="block text-sm font-semibold text-gray-600 mb-2 font-semibold">
               상세 내용
             </label>
             <textarea
@@ -188,36 +247,53 @@ const MyPromotionPage = () => {
           <div className="flex gap-4">
             <button
               type="submit"
-              className="flex-1 bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700"
+              disabled={uploading}
+              className="flex-1 bg-indigo-600 text-white py-4 rounded-xl font-bold"
             >
-              저장 완료
+              {uploading ? "업로드 중..." : "저장 완료"}
             </button>
             <button
               type="button"
               onClick={() => setIsEditing(false)}
-              className="px-8 py-4 bg-gray-100 text-gray-600 rounded-xl font-bold"
+              className="px-8 py-4 bg-gray-100 text-gray-600 rounded-xl font-bold font-semibold"
             >
               취소
             </button>
           </div>
         </form>
       ) : (
-        /* ... 기존의 홍보글 카드 UI ... */
         <div className="bg-white border-t-8 border-indigo-600 rounded-2xl p-8 shadow-md">
-          <div className="flex justify-between items-start mb-6">
+          <div className="flex justify-between items-start mb-6 font-semibold">
             <div>
-              <h3 className="text-2xl font-bold text-indigo-900 mb-2">
+              <h3 className="text-2xl font-bold text-indigo-900 mb-2 font-semibold">
                 {promotion?.title}
               </h3>
-              {promotion?.resumeCode && (
-                <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded font-bold">
-                  이력서 연결됨
-                </span>
-              )}
+              <div className="flex gap-2">
+                {promotion?.resumeCode && (
+                  <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded font-bold">
+                    이력서 연결됨
+                  </span>
+                )}
+                {promotion?.pdfDownloadUrl && (
+                  <a
+                    href={promotion.pdfDownloadUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded font-bold hover:bg-green-200"
+                  >
+                    📄 포트폴리오(PDF) 보기
+                  </a>
+                )}
+              </div>
             </div>
+            <span className="px-4 py-1 bg-green-100 text-green-700 rounded-full text-sm font-bold font-semibold">
+              노출 중
+            </span>
           </div>
-          {/* 중략: 기존 내용 출력 */}
-          <div className="flex gap-3 justify-end mt-4">
+          <p className="text-gray-700 whitespace-pre-wrap mb-8 p-6 bg-slate-50 rounded-xl italic font-semibold">
+            "{promotion?.content}"
+          </p>
+          <div className="flex gap-3 justify-end">
             <button
               onClick={() => setIsEditing(true)}
               className="px-5 py-2 border rounded-lg text-sm font-semibold hover:bg-gray-50"
