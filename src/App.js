@@ -41,6 +41,8 @@ import MemberUpdatePage from "./pages/member/MemberUpdatePage"; // 다른 회원
 
 import UserPage from "./pages/member/UserPage"; // 다른 회원 평가도 로그인 후 가능
 import ChatListPage from "./pages/chat/ChatListPage";
+import EmailVerification from "./components/EmailVerification";
+import ClientRegisterPage from "./pages/ClientRegisterPage";
 
 
 function App() {
@@ -86,6 +88,9 @@ function App() {
                   path="/commissions/:code/edit"
                   element={<CommissionUpsertPage action="update" />}
                 />
+
+                <Route path="/verify" element={<EmailVerification />}/>
+                <Route path="/regist/client" element={<ClientRegisterPage />}/>
 
                 {/* 마이페이지/관리 영역 */}
                 <Route path="/cart" element={<CartPage />} />
