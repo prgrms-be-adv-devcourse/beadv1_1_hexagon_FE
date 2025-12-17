@@ -12,16 +12,7 @@ const DepositPage = () => {
     setLoading(true);
     setError(null);
     try {
-      // 로컬 스토리지의 액세스 토큰 가져오기 (Bearer 접두어 제거)
-      let token = localStorage.getItem("accessToken");
-      if (!token) {
-        throw new Error("로그인이 필요합니다.");
-      }
-      if (token.startsWith("Bearer ")) {
-        token = token.replace("Bearer ", "");
-      }
-
-      const res = await api.get("/deposits", {});
+      const res = await api.get("/deposits");
 
       // 응답 스키마: { code, httpStatus, message, data: { amount } }
       const value = res?.data?.data?.amount;

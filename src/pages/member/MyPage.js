@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from "react";
-import api from "../../api/api";
-import { Star, Mail, Briefcase, Award } from "lucide-react"
-import {useNavigate} from "react-router-dom";
-const S3_BASE_URL = process.env.REACT_APP_S3_BASE_URL;
+
+import { useEffect, useState } from "react"
+import api from "../../api/api"
+import { Star, Mail, Briefcase, Award, X } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+const S3_BASE_URL = process.env.REACT_APP_S3_BASE_URL
 
 const MyPage = () => {
   const [memberData, setMemberData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const navigate = useNavigate(); // 추가
-
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [roleToRevoke, setRoleToRevoke] = useState(null)
+  const [revoking, setRevoking] = useState(false)
+  const navigate = useNavigate()
 
   const buildS3DownloadUrl = (key, queryString) => {
     if (!key) return ""
@@ -31,6 +34,66 @@ const MyPage = () => {
 
     fetchMyData()
   }, [])
+
+  const handleRevokeRole = async () => {
+    if (!roleToRevoke) return
+
+    try {
+      setRevoking(true)
+      await api.delete("/members/state", {
+        data: { role: roleToRevoke },
+      })
+
+
+      // 성공 후 memberData 업데이트
+      setMemberData((prev) => ({
+        ...prev,
+        info: {
+          ...prev.info,
+          role: prev.info.role === "BOTH" ? (roleToRevoke === "FREELANCER" ? "CLIENT" : "FREELANCER") : "NONE",
+        },
+      }))
+      // 3) AccessToken 재발급 요청
+      const reissueRes = await api.post("/auth/reissue", {},{
+        withCredentials: true
+      })
+      const authHeader = reissueRes.headers["authorization"] || reissueRes.headers["Authorization"]
+
+      console.log(authHeader);
+
+      if (authHeader) {
+        const newAccessToken = authHeader.replace("Bearer ", "")
+        // AuthContext & localStorage 갱신
+        localStorage.setItem("accessToken", newAccessToken)
+      } else {
+        console.warn("reissue 응답에서 Authorization 헤더를 찾지 못했습니다.")
+      }
+      setShowConfirmModal(false)
+      setRoleToRevoke(null)
+      window.location.reload()
+    } catch (err) {
+      console.error("역할 해제 실패:", err)
+      alert("역할 해제에 실패했습니다.")
+    } finally {
+      setRevoking(false)
+    }
+  }
+
+  const handleRegisterRole = (role) => {
+    if (role === "FREELANCER") {
+      navigate("/freelancer/register") // 사용자가 채울 경로
+    } else if (role === "CLIENT") {
+      navigate("/client/register") // 사용자가 채울 경로
+    }
+  }
+
+  const handleRevokeClick = (role) => {
+    setRoleToRevoke(role)
+    setShowConfirmModal(true)
+  }
+
+  const hasFreelancerRole = memberData?.info?.role === "FREELANCER" || memberData?.info?.role === "BOTH"
+  const hasClientRole = memberData?.info?.role === "CLIENT" || memberData?.info?.role === "BOTH"
 
   if (loading) {
     return (
@@ -60,7 +123,6 @@ const MyPage = () => {
   const profileImageUrl = profileImage ? buildS3DownloadUrl(profileImage.key, profileImage.queryString) : null
 
   const { info, rating, tags, images } = memberData
-
 
   return (
       <div className="min-h-screen bg-gray-50 py-10 px-4">
@@ -121,17 +183,12 @@ const MyPage = () => {
               정보 수정
             </button>
           </div>
-
-          {/* 정보 수정 버튼 */}
-
-
-
-          {rating && (
+          {rating &&
               (() => {
-                const satisfied = rating.satisfiedCount ?? 0;
-                const unsatisfied = rating.unsatisfiedCount ?? 0;
-                const total = satisfied + unsatisfied;
-                const satisfiedRate = total > 0 ? (satisfied / total) * 100 : 0;
+                const satisfied = rating.satisfiedCount ?? 0
+                const unsatisfied = rating.unsatisfiedCount ?? 0
+                const total = satisfied + unsatisfied
+                const satisfiedRate = total > 0 ? (satisfied / total) * 100 : 0
 
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -155,9 +212,7 @@ const MyPage = () => {
                         </div>
                         <div>
                           <p className="text-xs text-purple-600 font-semibold">총 평가 수</p>
-                          <p className="text-2xl font-bold text-purple-900">
-                            {total} 회
-                          </p>
+                          <p className="text-2xl font-bold text-purple-900">{total} 회</p>
                         </div>
                       </div>
 
@@ -174,9 +229,8 @@ const MyPage = () => {
                         </div>
                       </div>
                     </div>
-                );
-              })()
-          )}
+                )
+              })()}
 
           {tags && tags.length > 0 && (
               <div className="mb-8">
@@ -190,6 +244,82 @@ const MyPage = () => {
                   {tag.skill || tag.name}
                 </span>
                   ))}
+                </div>
+              </div>
+          )}
+
+          <div className="mb-8 pb-8 border-b border-gray-200">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">역할 관리</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* FREELANCER 역할 */}
+              <div className="p-4 border border-gray-200 rounded-lg">
+                <p className="text-sm text-gray-600 mb-3">프리랜서</p>
+                {hasFreelancerRole ? (
+                    <button
+                        onClick={() => handleRevokeClick("FREELANCER")}
+                        className="w-full px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
+                    >
+                      해제
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => handleRegisterRole("FREELANCER")}
+                        className="w-full px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition-colors"
+                    >
+                      등록
+                    </button>
+                )}
+              </div>
+
+              {/* CLIENT 역할 */}
+              <div className="p-4 border border-gray-200 rounded-lg">
+                <p className="text-sm text-gray-600 mb-3">클라이언트</p>
+                {hasClientRole ? (
+                    <button
+                        onClick={() => handleRevokeClick("CLIENT")}
+                        className="w-full px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
+                    >
+                      해제
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => handleRegisterRole("CLIENT")}
+                        className="w-full px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors"
+                    >
+                      등록
+                    </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {showConfirmModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900">역할 해제 확인</h2>
+                    <button onClick={() => setShowConfirmModal(false)} className="text-gray-400 hover:text-gray-600">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <p className="text-gray-600 mb-6">
+                    정말 <span className="font-semibold">{roleToRevoke}</span> 역할을 해제하시겠습니까?
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                        onClick={() => setShowConfirmModal(false)}
+                        className="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+                    >
+                      취소
+                    </button>
+                    <button
+                        onClick={handleRevokeRole}
+                        disabled={revoking}
+                        className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {revoking ? "해제 중..." : "확인"}
+                    </button>
+                  </div>
                 </div>
               </div>
           )}
