@@ -27,7 +27,7 @@ import MyProfilePage from "./pages/member/MyProfilePage";
 import PaymentHistoryPage from "./pages/payment/PaymentHistoryPage";
 import DepositHistoryPage from "./pages/deposit/DepositHistoryPage";
 import DepositPage from "./pages/deposit/DepositPage";
-import ResumeListPage from "./pages/resume/ResumeListPage";
+import ResumeListPage from "./pages/resume/MyResumePage";
 import SellerRegisterPage from "./pages/member/SellerRegisterPage";
 import SelfPromotionUpsertPage from "./pages/selfPromotion/SelfPromotionUpsertPage"; // Create/Update 공용
 import TagManagementPage from "./pages/tag/TagManagementPage";
@@ -43,7 +43,6 @@ import UserPage from "./pages/member/UserPage"; // 다른 회원 평가도 로�
 import ChatListPage from "./pages/chat/ChatListPage";
 import EmailVerification from "./components/EmailVerification";
 import ClientRegisterPage from "./pages/ClientRegisterPage";
-
 
 function App() {
   return (
@@ -89,20 +88,26 @@ function App() {
                   element={<CommissionUpsertPage action="update" />}
                 />
 
-                <Route path="/verify" element={<EmailVerification />}/>
-                <Route path="/register/client" element={<ClientRegisterPage />}/>
+                <Route path="/verify" element={<EmailVerification />} />
+                <Route
+                  path="/register/client"
+                  element={<ClientRegisterPage />}
+                />
 
                 {/* 마이페이지/관리 영역 */}
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/mypage" element={<MyPage />} />
-                <Route path="/mypage/update" element={<MemberUpdatePage />}/>
+                <Route path="/mypage/update" element={<MemberUpdatePage />} />
                 <Route path="/mypage/profile" element={<MyProfilePage />} />
                 <Route
                   path="/mypage/commissions/own"
                   element={<MyCommissionsPage />}
                 />
                 <Route path="/mypage/contracts" element={<MyContractsPage />} />
-                <Route path="/mypage/contracts/:code" element={<ContractDetailPage />} />
+                <Route
+                  path="/mypage/contracts/:code"
+                  element={<ContractDetailPage />}
+                />
                 <Route
                   path="/mypage/payments"
                   element={<PaymentHistoryPage />}
