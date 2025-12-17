@@ -90,7 +90,7 @@ function App() {
                 />
 
                 <Route path="/verify" element={<EmailVerification />}/>
-                <Route path="/regist/client" element={<ClientRegisterPage />}/>
+                <Route path="/register/client" element={<ClientRegisterPage />}/>
 
                 {/* 마이페이지/관리 영역 */}
                 <Route path="/cart" element={<CartPage />} />
