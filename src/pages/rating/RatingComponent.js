@@ -14,16 +14,15 @@ const RatingComponent = ({ memberCode }) => {
 
   const handleRate = async (type) => {
     try {
-      // 평가 업데이트 (백엔드: PATCH /api/ratings/{memberCode})
       const res = await api.patch(
         `/ratings/${memberCode}`,
         { isSatisfied: type === "good" },
-        { headers: { "X-CODE": localStorage.getItem("memberCode") } } // 호출자 코드
+        { headers: getXCodeHeader() }
       );
       setRating(res.data.data);
       alert("평가가 반영되었습니다!");
     } catch (e) {
-      alert(e.response?.data?.message || "본인은 평가할 수 없습니다.");
+      // 본인 평가 방지 로직 등 에러 처리
     }
   };
 
