@@ -46,7 +46,7 @@ const DepositHistoryPage = () => {
       if (!token) throw new Error("로그인이 필요합니다.");
 
       const res = await api.get("/deposits/histories", {
-        headers: { "X-CODE": token },
+        headers: { "AUTHORIZATION": token },
         params: {
           "cursor-date": cursor.date || undefined,
           "cursor-code": cursor.code || undefined,

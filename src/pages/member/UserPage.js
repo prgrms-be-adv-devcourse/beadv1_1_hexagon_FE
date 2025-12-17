@@ -1,148 +1,193 @@
+// src/pages/user/UserPage.js (예시 경로)
+
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import api from "../../api/api";
+import { Star, Mail, Briefcase, Award } from "lucide-react";
+
+const S3_BASE_URL = process.env.REACT_APP_S3_BASE_URL;
 
 const UserPage = () => {
-  const { memberCode } = useParams();
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const paramCode = queryParams.get("member-code") || memberCode;
+  const [memberData, setMemberData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const [memberData, setMemberData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const buildS3DownloadUrl = (key, queryString) => {
+    if (!key) return ""
+    return `${S3_BASE_URL}/${key}${queryString ?? ""}`
+  }
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (!paramCode) {
-        setError("사용자 코드가 제공되지 않았습니다.");
-        setLoading(false);
-        return;
-      }
-
+    const fetchMyData = async () => {
       try {
-        // GET /members?member-code={code} endpoint
-        const response = await api.get(`/members`, {
-          params: { "member-code": paramCode }
-        });
-        setMemberData(response.data.data);
+        const response = await api.get("/members/me")
+        setMemberData(response.data.data)
       } catch (err) {
-        console.error("사용자 정보 조회 실패:", err);
-        setError("사용자 정보를 불러오는데 실패했습니다.");
+        console.error("내 정보 조회 실패:", err)
+        setError("내 정보를 불러오는데 실패했습니다.")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchUserData();
-  }, [paramCode]);
+    fetchMyData()
+  }, [])
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-600">사용자 정보 로딩 중...</div>;
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-gray-600 text-lg font-medium">내 정보 로딩 중...</div>
+        </div>
+    )
   }
 
   if (error) {
-    return <div className="p-8 text-center text-red-600">{error}</div>;
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-red-500 text-lg font-medium">{error}</div>
+        </div>
+    )
   }
 
   if (!memberData) {
-    return <div className="p-8 text-center text-gray-600">정보가 없습니다.</div>;
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-gray-600 text-lg font-medium">정보가 없습니다.</div>
+        </div>
+    )
   }
 
-  return (
-    <div className="max-w-4xl mx-auto p-8 bg-white shadow-2xl rounded-xl">
-      <h2 className="text-3xl font-bold mb-6 text-gray-800 border-b pb-2">
-        👤 사용자 프로필
-      </h2>
+  const profileImage = memberData.images?.[0]
+  const profileImageUrl = profileImage ? buildS3DownloadUrl(profileImage.key, profileImage.queryString) : null
 
-      {/* 사용자 기본 정보 */}
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold mb-4 text-gray-700">기본 정보</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {memberData.info && (
-            <>
-              <div>
-                <p className="font-medium text-gray-700">닉네임:</p>
-                <p className="text-gray-800">{memberData.info.nickname || "미설정"}</p>
-              </div>
-              <div>
-                <p className="font-medium text-gray-700">이메일:</p>
-                <p className="text-gray-800">{memberData.info.email || "미설정"}</p>
-              </div>
-              <div>
-                <p className="font-medium text-gray-700">현재 상태:</p>
-                <span className="inline-block px-4 py-1 text-sm font-medium text-purple-800 bg-purple-100 rounded-full">
-                  {memberData.info.currentWorkState || "미설정"}
+  const { info, rating, tags, images } = memberData
+
+
+  return (
+      <div className="min-h-screen bg-gray-50 py-10 px-4">
+        <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-6 md:p-8">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
+            {/* 프로필 이미지 */}
+            {profileImageUrl ? (
+                <div className="flex-shrink-0">
+                  <img
+                      src={profileImageUrl || "/placeholder.svg"}
+                      alt="프로필 이미지"
+                      className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-full shadow-md border-4 border-blue-100"
+                  />
+                </div>
+            ) : (
+                <div className="flex-shrink-0">
+                  <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center shadow-md border-4 border-blue-100">
+                    <Briefcase className="w-16 h-16 text-blue-500" />
+                  </div>
+                </div>
+            )}
+
+            {/* 기본 정보 */}
+            <div className="flex-1 space-y-3">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{info?.nickName || "닉네임 미설정"}</h1>
+                {info?.role === "BOTH" ? (
+                    <>
+                  <span className="text-sm px-3 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                    CLIENT
+                  </span>
+                      <span className="text-sm px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
+                    FREELANCER
+                  </span>
+                    </>
+                ) : (
+                    <span className="text-sm px-3 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                  {info?.role || "NONE"}
                 </span>
+                )}
               </div>
-            </>
+
+              <div className="flex flex-wrap gap-4 text-gray-600">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  <span>{info?.email || "이메일 미설정"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-4 h-4" />
+                  <span>{info?.phoneNumber || "전화번호 미설정"}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {rating && (
+              (() => {
+                const satisfied = rating.satisfiedCount ?? 0;
+                const unsatisfied = rating.unsatisfiedCount ?? 0;
+                const total = satisfied + unsatisfied;
+                const satisfiedRate = total > 0 ? (satisfied / total) * 100 : 0;
+
+                return (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                      {/* 만족/불만족 비율 카드 */}
+                      <div className="bg-blue-50 rounded-xl p-4 flex items-center gap-4">
+                        <div className="p-3 bg-blue-100 rounded-full">
+                          <Star className="w-6 h-6 text-blue-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-blue-600 font-semibold">만족 비율</p>
+                          <p className="text-2xl font-bold text-blue-900">
+                            {total > 0 ? `${satisfiedRate.toFixed(1)}%` : "평가 없음"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* 총 평가 수 카드 */}
+                      <div className="bg-purple-50 rounded-xl p-4 flex items-center gap-4">
+                        <div className="p-3 bg-purple-100 rounded-full">
+                          <Award className="w-6 h-6 text-purple-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-purple-600 font-semibold">총 평가 수</p>
+                          <p className="text-2xl font-bold text-purple-900">
+                            {total} 회
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* 만족/불만족 개수 카드 */}
+                      <div className="bg-emerald-50 rounded-xl p-4 flex items-center gap-4">
+                        <div className="p-3 bg-emerald-100 rounded-full">
+                          <Star className="w-6 h-6 text-emerald-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-emerald-600 font-semibold">만족 / 불만족</p>
+                          <p className="text-2xl font-bold text-emerald-900">
+                            {satisfied} / {unsatisfied}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                );
+              })()
           )}
+
+          {tags && tags.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold mb-4 text-gray-700">보유 스킬</h3>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => (
+                      <span
+                          key={tag.tagCode || tag.name}
+                          className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm"
+                      >
+                  {tag.skill || tag.name}
+                </span>
+                  ))}
+                </div>
+              </div>
+          )}
+
         </div>
       </div>
-
-      {/* 사용자 평가 정보 */}
-      {memberData.rating && (
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-gray-700">평가 정보</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-blue-50 p-4 rounded-lg text-center">
-              <p className="font-medium text-gray-700">평균 평점</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {memberData.rating.averageRating?.toFixed(1) || "0.0"}
-              </p>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg text-center">
-              <p className="font-medium text-gray-700">총 평가 수</p>
-              <p className="text-2xl font-bold text-green-600">
-                {memberData.rating.totalRatings || "0"}
-              </p>
-            </div>
-            <div className="bg-purple-50 p-4 rounded-lg text-center">
-              <p className="font-medium text-gray-700">최근 평가</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {memberData.rating.recentRating?.toFixed(1) || "없음"}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 사용자 기술 태그 */}
-      {memberData.tags && memberData.tags.length > 0 && (
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-gray-700">기술 태그</h3>
-          <div className="flex flex-wrap gap-2">
-            {memberData.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="px-3 py-1 bg-gray-200 text-gray-800 rounded-full text-sm"
-              >
-                {tag.name}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 사용자 프로필 이미지 */}
-      {memberData.images && memberData.images.length > 0 && (
-        <div>
-          <h3 className="text-xl font-semibold mb-4 text-gray-700">프로필 이미지</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {memberData.images.map((image, index) => (
-              <div key={index} className="relative">
-                <img
-                  src={image.url}
-                  alt={`프로필 이미지 ${index + 1}`}
-                  className="w-full h-48 object-cover rounded-lg"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  )
 };
 
 export default UserPage;
