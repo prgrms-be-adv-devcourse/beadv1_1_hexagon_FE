@@ -31,7 +31,7 @@ import ResumeListPage from "./pages/resume/MyResumePage";
 import SellerRegisterPage from "./pages/member/SellerRegisterPage";
 import SelfPromotionUpsertPage from "./pages/selfPromotion/MyPromotionPage"; // Create/Update 공용
 import TagManagementPage from "./pages/tag/TagManagementPage";
-import MemberRatingPage from "./pages/rating/MemberRatingPage"; // 다른 회원 평가도 로그인 후 가능
+import MemberRatingPage from "./pages/rating/RatingComponent"; // 다른 회원 평가도 로그인 후 가능
 import ContractDetailPage from "./pages/contract/ContractDetailPage";
 import LoginSuccessPage from "./pages/LoginSuccessPage";
 import MyPage from "./pages/member/MyPage";
