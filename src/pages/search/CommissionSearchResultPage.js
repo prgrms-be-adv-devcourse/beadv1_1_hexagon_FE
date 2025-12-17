@@ -1,76 +1,444 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import api from '../../api/api';
+import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import api from "../../api/api";
 
 const CommissionSearchResultPage = () => {
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // ===== 1) URL에서 현재 필터값 읽기 =====
+    const query = searchParams.get("query") || "";
+    const scope = searchParams.get("scope") || "ALL";
+    const tagsRaw = searchParams.get("tags") || ""; // "Backend, JPA"
+    const paymentType = searchParams.get("payment-type") || ""; // MONTHLY | PER_JOB
+    const minPay = searchParams.get("min-pay") || "";
+    const startedAt = searchParams.get("started-at") || "";
+    const endedAt = searchParams.get("ended-at") || "";
+    const openStatus = searchParams.get("open-status") || "ALL";
+
+    const pageFromUrl = Number(searchParams.get("page") ?? 0);
+    const sizeFromUrl = Number(searchParams.get("size") ?? 10);
+
+    const safePage = Number.isFinite(pageFromUrl) && pageFromUrl >= 0 ? pageFromUrl : 0;
+    const safeSize = Number.isFinite(sizeFromUrl) && sizeFromUrl >= 1 ? sizeFromUrl : 10;
+
+    // ===== 2) 화면 상태 =====
     const [results, setResults] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [currentPage, setCurrentPage] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(safePage);
 
-    const query = searchParams.get('query') || '';
-    const tags = searchParams.getAll('tags');
+    // ===== 3) 입력폼 state =====
+    const [inputQuery, setInputQuery] = useState(query);
+    const [inputScope, setInputScope] = useState(scope);
+    const [inputTagsRaw, setInputTagsRaw] = useState(tagsRaw);
+    const [inputPaymentType, setInputPaymentType] = useState(paymentType);
+    const [inputMinPay, setInputMinPay] = useState(minPay);
+    const [inputStartedAt, setInputStartedAt] = useState(startedAt);
+    const [inputEndedAt, setInputEndedAt] = useState(endedAt);
+    const [inputOpenStatus, setInputOpenStatus] = useState(openStatus);
 
+    // ===== 4) URL 변경되면 입력폼 동기화 =====
+    useEffect(() => setInputQuery(query), [query]);
+    useEffect(() => setInputScope(scope), [scope]);
+    useEffect(() => setInputTagsRaw(tagsRaw), [tagsRaw]);
+    useEffect(() => setInputPaymentType(paymentType), [paymentType]);
+    useEffect(() => setInputMinPay(minPay), [minPay]);
+    useEffect(() => setInputStartedAt(startedAt), [startedAt]);
+    useEffect(() => setInputEndedAt(endedAt), [endedAt]);
+    useEffect(() => setInputOpenStatus(openStatus), [openStatus]);
+
+    useEffect(() => setCurrentPage(safePage), [safePage]);
+
+    // ===== 5) tags 입력값을 칩으로 보여주기 위한 파싱 =====
+    const parsedTagsFromQuery = useMemo(() => {
+        return (tagsRaw || "")
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean);
+    }, [tagsRaw]);
+
+    // ===== 6) URL 업데이트 =====
+    const updateUrlParams = (next) => {
+        const params = new URLSearchParams(searchParams);
+
+        Object.entries(next).forEach(([k, v]) => {
+            const value = (v ?? "").toString().trim();
+            if (value === "") params.delete(k);
+            else params.set(k, value);
+        });
+
+        if (!params.get("size")) params.set("size", String(safeSize));
+        setSearchParams(params);
+    };
+
+    // ===== 7) 검색 실행 =====
+    const onSearch = () => {
+        updateUrlParams({
+            query: inputQuery,
+            scope: inputScope,
+            tags: inputTagsRaw,
+            "payment-type": inputPaymentType,
+            "min-pay": inputMinPay,
+            "started-at": inputStartedAt,
+            "ended-at": inputEndedAt,
+            "open-status": inputOpenStatus,
+            page: "0",
+            size: String(safeSize),
+        });
+    };
+
+    const onKeyDown = (e) => {
+        if (e.key === "Enter") onSearch();
+    };
+
+    // ===== 8) 페이지 이동 =====
+    const movePage = (nextPage) => {
+        if (nextPage < 0) return;
+        updateUrlParams({ page: String(nextPage) });
+    };
+
+    // ===== 9) content 미리보기 =====
+    const truncateText = (text, maxLen = 30) => {
+        if (!text) return "";
+        return text.length > maxLen ? text.slice(0, maxLen) + "..." : text;
+    };
+
+    // 날짜 표시(빈 값이면 -)
+    const formatRange = (s, e) => {
+        const a = s || "-";
+        const b = e || "-";
+        return `${a} ~ ${b}`;
+    };
+
+    // ===== 10) 의존성 키 =====
+    const depsKey = useMemo(() => {
+        return [
+            query,
+            scope,
+            tagsRaw,
+            paymentType,
+            minPay,
+            startedAt,
+            endedAt,
+            openStatus,
+            currentPage,
+            safeSize,
+        ].join("|");
+    }, [query, scope, tagsRaw, paymentType, minPay, startedAt, endedAt, openStatus, currentPage, safeSize]);
+
+    // ===== 11) API 호출 =====
     useEffect(() => {
-        const fetchSearchResults = async () => {
+        const controller = new AbortController();
+
+        const fetch = async () => {
             setLoading(true);
             try {
-                // GET /api/search/commissions
-                const response = await api.get('/search/commissions', {
+                const response = await api.get("/search/commissions", {
+                    signal: controller.signal,
                     params: {
                         query,
-                        tags: tags.join(','),
+                        scope,
+                        tags: tagsRaw,
+                        "payment-type": paymentType,
+                        "min-pay": minPay,
+                        "started-at": startedAt,
+                        "ended-at": endedAt,
+                        "open-status": openStatus,
                         page: currentPage,
-                        size: 10,
-                    }
+                        size: safeSize,
+                    },
                 });
-                setResults(response.data.data.content || []); 
+
+                setResults(response.data?.data?.content ?? []);
             } catch (error) {
+                if (error?.name === "CanceledError" || error?.code === "ERR_CANCELED") return;
                 console.error("의뢰글 검색 실패:", error);
             } finally {
-                setLoading(false);
+                if (!controller.signal.aborted) setLoading(false);
             }
         };
-        fetchSearchResults();
-    }, [query, tags, currentPage]);
 
-    if (loading) return <div className="p-8 text-center text-gray-600">의뢰글 검색 중...</div>;
+        fetch();
+        return () => controller.abort();
+    }, [depsKey]);
 
     return (
         <div className="max-w-5xl mx-auto p-6 bg-white shadow-lg rounded-xl">
-            <h2 className="text-3xl font-bold mb-6 text-gray-800 border-b pb-2">
-                🔎 의뢰글 검색 결과 (키워드: <span className="text-indigo-600">"{query}"</span>)
-            </h2>
-            
-            <div className="search-filters mb-6 p-4 bg-gray-100 rounded-lg">
-                <p className="font-semibold text-gray-700">적용된 태그:</p>
-                <div className="flex flex-wrap gap-2 mt-2">
-                    {tags.map(tag => (
-                        <span key={tag} className="px-3 py-1 text-sm bg-indigo-200 text-indigo-800 rounded-full font-medium">
-                            #{tag}
-                        </span>
-                    ))}
-                    {tags.length === 0 && <span className="text-gray-500 italic">없음</span>}
+            <h2 className="text-3xl font-bold mb-6 text-gray-800 border-b pb-2">🔎 의뢰글 검색</h2>
+
+            {/* 검색 폼 */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {/* query */}
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">키워드</label>
+                        <input
+                            className="w-full border rounded px-3 py-2"
+                            placeholder="예: 백엔드"
+                            value={inputQuery}
+                            onChange={(e) => setInputQuery(e.target.value)}
+                            onKeyDown={onKeyDown}
+                        />
+                    </div>
+
+                    {/* scope */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">검색 범위</label>
+                        <select
+                            className="w-full border rounded px-3 py-2"
+                            value={inputScope}
+                            onChange={(e) => setInputScope(e.target.value)}
+                        >
+                            <option value="ALL">제목 + 내용</option>
+                            <option value="TITLE">제목</option>
+                            <option value="CONTENT">내용</option>
+                        </select>
+                    </div>
+
+                    {/* open-status */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">마감 여부</label>
+                        <select
+                            className="w-full border rounded px-3 py-2"
+                            value={inputOpenStatus}
+                            onChange={(e) => setInputOpenStatus(e.target.value)}
+                        >
+                            <option value="ALL">전체</option>
+                            <option value="OPEN">모집중</option>
+                            <option value="CLOSED">마감</option>
+                        </select>
+                    </div>
                 </div>
-                {/* 태그 추천 API 영역 */}
+
+                {/* tags */}
+                <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">태그 (콤마로 구분)</label>
+                    <input
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="예: Backend, JPA"
+                        value={inputTagsRaw}
+                        onChange={(e) => setInputTagsRaw(e.target.value)}
+                        onKeyDown={onKeyDown}
+                    />
+                    <div className="flex flex-wrap gap-2 mt-2">
+                        {parsedTagsFromQuery.map((t) => (
+                            <span key={t} className="px-3 py-1 text-sm bg-indigo-200 text-indigo-800 rounded-full font-medium">
+                #{t}
+              </span>
+                        ))}
+                        {parsedTagsFromQuery.length === 0 && <span className="text-gray-500 italic">태그 없음</span>}
+                    </div>
+                </div>
+
+                {/* payment-type + min-pay + size */}
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {/* payment-type */}
+                    <div className="md:col-span-2">
+                        <p className="text-sm font-medium text-gray-700 mb-2">지급 방식 (payment-type)</p>
+                        <div className="flex items-center gap-6">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="paymentType"
+                                    value="MONTHLY"
+                                    checked={inputPaymentType === "MONTHLY"}
+                                    onChange={() => setInputPaymentType("MONTHLY")}
+                                />
+                                <span>월급</span>
+                            </label>
+
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="paymentType"
+                                    value="PER_JOB"
+                                    checked={inputPaymentType === "PER_JOB" || inputPaymentType === "PERJOB"}
+                                    onChange={() => setInputPaymentType("PER_JOB")}
+                                />
+                                <span>건당</span>
+                            </label>
+
+                            <button
+                                type="button"
+                                className="ml-auto text-sm px-3 py-2 rounded bg-gray-200"
+                                onClick={() => setInputPaymentType("")}
+                            >
+                                선택 해제
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* min-pay */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">최소 급여</label>
+                        <input
+                            className="w-full border rounded px-3 py-2"
+                            placeholder="예: 500000"
+                            value={inputMinPay}
+                            onChange={(e) => {
+                                const v = e.target.value;
+                                if (v === "" || /^\d+$/.test(v)) setInputMinPay(v);
+                            }}
+                            onKeyDown={onKeyDown}
+                        />
+                    </div>
+
+                    {/* size */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">페이지 크기 (size)</label>
+                        <select
+                            className="w-full border rounded px-3 py-2"
+                            value={String(safeSize)}
+                            onChange={(e) => updateUrlParams({ size: e.target.value, page: "0" })}
+                        >
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="30">30</option>
+                        </select>
+                    </div>
+                </div>
+
+                {/* dates */}
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">시작일 (started-at)</label>
+                        <input
+                            type="date"
+                            className="w-full border rounded px-3 py-2"
+                            value={inputStartedAt}
+                            onChange={(e) => setInputStartedAt(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">종료일 (ended-at)</label>
+                        <input
+                            type="date"
+                            className="w-full border rounded px-3 py-2"
+                            value={inputEndedAt}
+                            onChange={(e) => setInputEndedAt(e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                {/* buttons */}
+                <div className="mt-4 flex gap-2">
+                    <button className="px-4 py-2 rounded bg-indigo-600 text-white" onClick={onSearch}>
+                        검색
+                    </button>
+                    <button
+                        className="px-4 py-2 rounded bg-gray-200"
+                        onClick={() => {
+                            setInputQuery("");
+                            setInputScope("ALL");
+                            setInputTagsRaw("");
+                            setInputPaymentType("");
+                            setInputMinPay("");
+                            setInputStartedAt("");
+                            setInputEndedAt("");
+                            setInputOpenStatus("ALL");
+
+                            updateUrlParams({
+                                query: "",
+                                scope: "ALL",
+                                tags: "",
+                                "payment-type": "",
+                                "min-pay": "",
+                                "started-at": "",
+                                "ended-at": "",
+                                "open-status": "ALL",
+                                page: "0",
+                            });
+                        }}
+                    >
+                        초기화
+                    </button>
+                </div>
             </div>
 
+            {/* 로딩 */}
+            {loading && (
+                <div className="p-3 mb-4 text-center text-gray-600 bg-gray-50 rounded">
+                    의뢰글 검색 중...
+                </div>
+            )}
+
+            {/* ✅ 결과 리스트 (요청한 필드들 추가됨) */}
             <div className="space-y-4">
-                {results.length === 0 ? (
+                {results.length === 0 && !loading ? (
                     <p className="text-gray-500 italic text-center py-8">검색 결과가 없습니다.</p>
                 ) : (
-                    results.map(item => (
-                        <div key={item.code} className="p-5 border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition duration-200">
+                    results.map((item) => (
+                        <div
+                            key={item.code}
+                            className="p-5 border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition duration-200"
+                        >
+                            {/* 제목 */}
                             <h4 className="text-xl font-semibold text-indigo-700">{item.title}</h4>
-                            <p className="mt-1 text-gray-600">
-                                <span className="font-bold text-green-600">{item.pay}</span> / 
-                                <span className="ml-1 text-sm font-medium bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">{item.paymentType}</span>
-                            </p>
+
+                            {/* content 30자 프리뷰 */}
+                            <p className="mt-2 text-gray-700">{truncateText(item.content, 30)}</p>
+
+                            {/* 작성자 + 기간 */}
+                            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                                <span className="font-medium text-gray-800">{item.memberNickname}</span>
+                                <span className="text-gray-400">|</span>
+                                <span>기간: {formatRange(item.startedAt, item.endedAt)}</span>
+
+                                {/* 모집 상태 뱃지 (isOpen) */}
+                                {typeof item.isOpen === "boolean" && (
+                                    <span
+                                        className={
+                                            "ml-auto text-xs px-2 py-0.5 rounded-full border " +
+                                            (item.isOpen
+                                                ? "bg-green-50 text-green-700 border-green-200"
+                                                : "bg-gray-50 text-gray-600 border-gray-200")
+                                        }
+                                    >
+                    {item.isOpen ? "모집중" : "마감"}
+                  </span>
+                                )}
+                            </div>
+
+                            {/* 태그 칩 */}
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                {(item.tags ?? []).map((t) => (
+                                    <span
+                                        key={t}
+                                        className="px-2 py-1 text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full"
+                                    >
+                    #{t}
+                  </span>
+                                ))}
+                            </div>
+
+                            {/* 급여/지급방식 */}
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <span className="font-bold text-green-600">{item.payAmount?.toLocaleString?.() ?? item.payAmount}원</span>
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
+                  {item.paymentType}
+                </span>
+                            </div>
                         </div>
                     ))
                 )}
             </div>
-            {/* 페이지네이션/더보기 버튼 UI */}
+
+            {/* 이전/다음 */}
+            <div className="flex justify-between mt-6">
+                <button
+                    className="px-4 py-2 rounded bg-gray-200 disabled:opacity-50"
+                    disabled={currentPage === 0}
+                    onClick={() => movePage(currentPage - 1)}
+                >
+                    이전
+                </button>
+
+                <button
+                    className="px-4 py-2 rounded bg-gray-200"
+                    onClick={() => movePage(currentPage + 1)}
+                >
+                    다음
+                </button>
+            </div>
         </div>
     );
 };
