@@ -1,91 +1,110 @@
-import React, { useEffect, useState } from 'react';
-import api from '../../api/api';
+import React, { useEffect, useState, useCallback } from "react";
+import api from "../../api/api";
 
 const TagManagementPage = () => {
-    const [myTags, setMyTags] = useState([]);
-    const [allTags, setAllTags] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const [allTags, setAllTags] = useState([]); // 시스템 전체 태그
+  const [myTagCodes, setMyTagCodes] = useState([]); // 내가 선택한 태그 코드들
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-    const fetchTags = async () => {
-        setLoading(true);
-        try {
-            // GET /api/tags/me
-            const myResponse = await api.get('/tags/me');
-            setMyTags(myResponse.data.data || []);
+  // X-CODE 가져오기
+  const getXCodeHeader = () => {
+    let token = localStorage.getItem("accessToken");
+    if (token && token.startsWith("Bearer "))
+      token = token.replace("Bearer ", "");
+    return token ? { "X-CODE": token } : {};
+  };
 
-            // GET /api/tags
-            const allResponse = await api.get('/tags');
-            setAllTags(allResponse.data.data || []);
-            
-        } catch (error) {
-            console.error("태그 정보 조회 실패:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+  // 초기 데이터 로드
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // 1. 전체 태그 목록 조회
+      const allTagsRes = await api.get("/tags");
+      setAllTags(allTagsRes.data.data);
 
-    useEffect(() => {
-        fetchTags();
-    }, []);
+      // 2. 내 태그 목록 조회
+      const myTagsRes = await api.get("/tags/me", {
+        headers: getXCodeHeader(),
+      });
+      setMyTagCodes(myTagsRes.data.data.map((t) => t.tagCode));
+    } catch (e) {
+      alert("데이터를 불러오지 못했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    const handleToggleTag = async (tagCode, isLinked) => {
-        try {
-            if (isLinked) {
-                // DELETE /api/tags/member-tags/{tagCode}
-                await api.delete(`/tags/member-tags/${tagCode}`);
-                alert("태그 연결이 해제되었습니다.");
-            } else {
-                // POST /api/tags/member-tags/{tagCode}
-                await api.post(`/tags/member-tags/${tagCode}`);
-                alert("태그가 연결되었습니다.");
-            }
-            fetchTags(); // 목록 새로고침
-        } catch (error) {
-            console.error("태그 연결/해제 실패:", error);
-            alert("태그 연결/해제 실패: " + error.response?.data.message);
-        }
-    };
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-    if (loading) return <div className="p-8 text-center text-gray-600">태그 관리 정보 로딩 중...</div>;
-
-    return (
-        <div className="max-w-4xl mx-auto p-8 bg-white shadow-2xl rounded-xl">
-            <h2 className="text-3xl font-bold mb-8 text-gray-800 border-b pb-2">🏷️ 기술 태그 관리</h2>
-            
-            <div className="mb-8 p-4 border border-blue-200 rounded-lg bg-blue-50">
-                <p className="font-semibold text-blue-800 mb-2">✅ 현재 보유 태그:</p>
-                <div className="flex flex-wrap gap-3">
-                    {myTags.map(t => (
-                        <span key={t.code} className="px-4 py-1 text-sm font-bold bg-indigo-500 text-white rounded-full shadow-md">
-                            {t.skill}
-                        </span>
-                    ))}
-                    {myTags.length === 0 && <span className="text-gray-600 italic">연결된 태그가 없습니다.</span>}
-                </div>
-            </div>
-
-            <h3 className="text-xl font-semibold mb-4 text-gray-700">전체 태그 목록에서 선택/해제하기:</h3>
-            <div className="flex flex-wrap gap-3 p-4 border border-gray-300 rounded-lg">
-                {allTags.map(tag => {
-                    const isLinked = myTags.some(t => t.code === tag.code);
-                    return (
-                        <button 
-                            key={tag.code} 
-                            onClick={() => handleToggleTag(tag.code, isLinked)} 
-                            className={`px-4 py-2 text-sm font-medium rounded-full transition duration-150 shadow-sm ${
-                                isLinked 
-                                    ? 'bg-green-500 text-white hover:bg-green-600' 
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                        >
-                            {tag.skill} {isLinked ? '✔️ 해제' : '➕ 추가'}
-                        </button>
-                    );
-                })}
-            </div>
-            {/* 태그 생성 API 영역 (관리자 또는 별도 폼) */}
-        </div>
+  // 태그 토글 (선택/해제)
+  const toggleTag = (tagCode) => {
+    setMyTagCodes((prev) =>
+      prev.includes(tagCode)
+        ? prev.filter((code) => code !== tagCode)
+        : [...prev, tagCode]
     );
+  };
+
+  // 서버에 저장 (동기화 API 호출)
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await api.put("/tags/members/me", myTagCodes, {
+        headers: getXCodeHeader(),
+      });
+      alert("기술 스택이 업데이트되었습니다!");
+    } catch (e) {
+      alert("저장에 실패했습니다.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div className="p-6">로딩 중...</div>;
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-xl mt-10">
+      <h2 className="text-2xl font-bold text-gray-800 mb-2">기술 스택 설정</h2>
+      <p className="text-gray-500 mb-6 text-sm">
+        보유하신 기술 태그를 선택해주세요. 이력서와 매칭에 활용됩니다.
+      </p>
+
+      <div className="flex flex-wrap gap-3 mb-8">
+        {allTags.map((tag) => {
+          const isSelected = myTagCodes.includes(tag.tagCode);
+          return (
+            <button
+              key={tag.tagCode}
+              onClick={() => toggleTag(tag.tagCode)}
+              className={`px-4 py-2 rounded-full border transition ${
+                isSelected
+                  ? "bg-indigo-600 text-white border-indigo-600"
+                  : "bg-white text-gray-600 border-gray-300 hover:border-indigo-400"
+              }`}
+            >
+              {isSelected && <span className="mr-1">✓</span>}
+              {tag.skill}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex justify-end border-t pt-6">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className={`px-6 py-2 rounded-lg font-semibold text-white ${
+            saving ? "bg-indigo-300" : "bg-indigo-600 hover:bg-indigo-700"
+          }`}
+        >
+          {saving ? "저장 중..." : "변경사항 저장"}
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default TagManagementPage;
