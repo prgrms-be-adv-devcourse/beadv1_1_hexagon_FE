@@ -83,7 +83,7 @@ const MyPage = () => {
     if (role === "FREELANCER") {
       navigate("/freelancer/register") // 사용자가 채울 경로
     } else if (role === "CLIENT") {
-      navigate("/client/register") // 사용자가 채울 경로
+      navigate("/register/client") // 사용자가 채울 경로
     }
   }
 
