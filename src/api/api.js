@@ -1,6 +1,19 @@
 import axios from "axios";
-import { getAuthService } from "../components/AuthContext"; // Hook이 아닌 함수 참조
-import { API_BASE_URL, REISSUE_URL, CLAIMS } from "../constants";
+import { getAuthService, AuthProvider } from "../components/AuthContext"; // Hook이 아닌 함수 참조
+import { decode } from "jwt-js-decode";
+
+// JWT Access Token의 Claim Key 상수화 (백엔드 JwtProperties와 일치해야 함)
+const CLAIMS = {
+  // 백엔드 @Value("${jwt.claims.member-code}") 값과 일치해야 함
+  MEMBER_CODE: "member-code",
+  // 백엔드 @Value("${jwt.claims.is-sign}") 값과 일치해야 함
+  IS_SIGNED_UP: "is-signed-up",
+  // 역할 클레임이 있다면 추가: ROLE: "role"
+};
+
+const EC2_DOMAIN = process.env.REACT_APP_EC2_DOMAIN;
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const REISSUE_URL = process.env.REACT_APP_REISSUE_URL;
 
 const instance = axios.create({
   baseURL: API_BASE_URL,
@@ -56,14 +69,10 @@ instance.interceptors.response.use(
       }
 
       // 재발급 요청(/api/auth/reissue) 자체가 401을 받으면 로그아웃 처리
-      if (originalRequest.url === "/api/auth/reissue" &&
-        error.response?.status === 401
-      ) {
-        console.error(
-          "❌ [Reissue 401] Refresh Token 만료. 자동 로그아웃을 시작합니다."
-        );
-        // 로그아웃 처리
-        authService.logout(false);
+      if (originalRequest.url === "/api/auth/reissue") {
+        if (error.response?.data?.customErrorCode === "UNAUTHORIZATION") {
+          authService.logout(false);
+        }
         return Promise.reject(error);
       }
 

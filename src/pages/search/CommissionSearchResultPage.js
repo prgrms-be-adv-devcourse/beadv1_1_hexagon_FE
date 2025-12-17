@@ -10,29 +10,28 @@ const CommissionSearchResultPage = () => {
 
     const query = searchParams.get('query') || '';
     const tags = searchParams.getAll('tags');
+    const tagsKey = tags.join(',');
 
     useEffect(() => {
         const fetchSearchResults = async () => {
             setLoading(true);
             try {
-                // GET /api/search/commissions
                 const response = await api.get('/search/commissions', {
                     params: {
                         query,
-                        tags: tags.join(','),
+                        tags: tagsKey,
                         page: currentPage,
                         size: 10,
                     }
                 });
-                setResults(response.data.data.content || []); 
-            } catch (error) {
-                console.error("의뢰글 검색 실패:", error);
+                setResults(response.data.data.content || []);
             } finally {
                 setLoading(false);
             }
         };
+
         fetchSearchResults();
-    }, [query, tags, currentPage]);
+    }, [query, tagsKey, currentPage]);
 
     if (loading) return <div className="p-8 text-center text-gray-600">의뢰글 검색 중...</div>;
 
