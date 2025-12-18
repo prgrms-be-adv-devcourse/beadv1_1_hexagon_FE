@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from 'axios'; // axios 임포트
 import { styles } from "../styles/styles";
 
 // Java 서버 주소
@@ -72,20 +72,13 @@ export default function SuccessPage() {
             } catch (error) {
                 console.error("결제 승인 에러 상세:", error);
 
-                let errorMessage;
-
                 // 401 에러일 경우 별도 메시지 처리
                 if (error.response && error.response.status === 401) {
-                    // 401 Unauthorized 에러 시, 로컬 스토리지 토큰 삭제 후 로그인 페이지로 리다이렉션
-                    localStorage.removeItem('accessToken');
-                    alert("세션이 만료되었거나 인증 정보가 잘못되었습니다. 다시 로그인해주세요.");
-                    navigate('/login', { replace: true });
-                    return; // 리다이렉션 후 로직 종료
+                    setPaymentResult({ error: "인증이 만료되었거나 잘못되었습니다. 다시 로그인해주세요." });
                 } else {
-                    errorMessage = error.response?.data?.message || "결제 승인에 실패했습니다.";
+                    const errorMessage = error.response?.data?.message || "결제 승인에 실패했습니다.";
+                    setPaymentResult({ error: errorMessage });
                 }
-
-                setPaymentResult({ error: errorMessage });
             } finally {
                 setIsLoading(false);
                 sessionStorage.removeItem("paymentAmount");
@@ -93,7 +86,7 @@ export default function SuccessPage() {
         };
 
         requestPaymentConfirm();
-    }, [searchParams, navigate]);
+    }, [searchParams]);
 
     if (isLoading) {
         return (
