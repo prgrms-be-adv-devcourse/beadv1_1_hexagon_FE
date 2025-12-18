@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios"; // 실제 사용 시 필요
+import api from "../../api/api";
+
 import {
     Trash2,
     CreditCard,
@@ -84,22 +86,42 @@ const CartPage = () => {
         setLoading(true);
 
         // [Mock]
-        setTimeout(() => {
-            setCartGroups(MOCK_DATA);
-            setLoading(false);
-        }, 600);
+        // setTimeout(() => {
+        //     setCartGroups(MOCK_DATA);
+        //     setLoading(false);
+        // }, 600);
 
         // [Real API]
-        /*
         try {
-          const response = await axios.get("/api/cart");
-          setCartGroups(response.data.data || []);
+          const response = await api.get("/carts/items");
+            const rawData = response.data.data || [];
+
+            // CartItemsEntity -> Mock 데이터 구조로 변환
+            const transformedData = rawData.map(item => ({
+                commissionCode: item.code || `COM-${item.cartCode}`,
+                startedAt: item.startedAt,
+                endedAt: item.endedAt,
+                paymentType: item.paymentType,
+                amount: parseInt(item.amount) || 0,
+                contractInfos: [{
+                    contractCode: item.contractCode,
+                    itemCode: item.code,
+                    clientName: "클라이언트", // 백엔드에서 추가 필요
+                    freelancerName: "프리랜서", // 백엔드에서 추가 필요
+                    freelancerCode: "DEV-001",
+                    isRecommend: false,
+                    contractTitle: `${item.paymentType} 계약` // 백엔드에서 title 추가 필요
+                }]
+            }));
+
+            console.log('🔄 변환된 데이터:', transformedData);
+            setCartGroups(transformedData);
         } catch (error) {
           console.error("장바구니 조회 실패:", error);
         } finally {
           setLoading(false);
         }
-        */
+
     };
 
     useEffect(() => {
@@ -113,23 +135,21 @@ const CartPage = () => {
         if (!window.confirm("정말 이 아이템을 삭제하시겠습니까?")) return;
 
         // [Mock] 로컬 상태 즉시 반영
-        setCartGroups(prevGroups => {
-            return prevGroups.map(group => ({
-                ...group,
-                contractInfos: group.contractInfos.filter(c => c.itemCode !== itemCode)
-            })).filter(group => group.contractInfos.length > 0);
-        });
+        // setCartGroups(prevGroups => {
+        //     return prevGroups.map(group => ({
+        //         ...group,
+        //         contractInfos: group.contractInfos.filter(c => c.itemCode !== itemCode)
+        //     })).filter(group => group.contractInfos.length > 0);
+        // });
 
         // [Real API]
-        /*
         try {
-          await axios.delete(`/api/cart/${itemCode}`);
-          // fetchCartItems(); // 목록 새로고침
+          await api.delete(`/carts/items/${itemCode}`);
+          fetchCartItems(); // 목록 새로고침
         } catch (error) {
           console.error("아이템 삭제 실패:", error);
           alert("삭제 처리에 실패했습니다.");
         }
-        */
     };
 
     // ----------------------------------------------------------------------
