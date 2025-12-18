@@ -373,10 +373,10 @@ const PromotionSearchResultPage = () => {
                             key={item.code}
                             role="button"
                             tabIndex={0}
-                            onClick={() => navigate(`/self-promotions/${item.code}`)}
+                            onClick={() => navigate(`/self-promotion/${item.code}`)}
                             onKeyDown={(e) => {
                                 if (e.key === "Enter" || e.key === " ") {
-                                    navigate(`/self-promotions/${item.code}`);
+                                    navigate(`/self-promotion/${item.code}`);
                                 }
                             }}
                             className="p-5 border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-300"
