@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import api from "../../api/api";
 
 const MyResumePage = () => {
-  const [resume, setResume] = useState(null); // 초기값을 null로 설정하여 존재 여부 파악
+  const [resume, setResume] = useState({ title: "", body: "", link: "" }); // 초기값을 null로 설정하여 존재 여부 파악
   const [experiences, setExperiences] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditingResume, setIsEditingResume] = useState(false);
@@ -21,14 +21,23 @@ const MyResumePage = () => {
     setLoading(true);
     try {
       const res = await api.get("/resumes/me");
-      if (res.data.data) {
-        setResume(res.data.data);
-        setExperiences(res.data.data.experiences || []);
+
+      // API 응답 구조를 콘솔로 꼭 확인해보세요!
+      console.log("서버 응답:", res.data);
+
+      // 응답 데이터가 있으면 업데이트 (서버 구조에 따라 res.data 또는 res.data.data)
+      const serverData = res.data.data || res.data;
+
+      if (serverData && serverData.resumeCode) {
+        setResume(serverData);
+        setExperiences(serverData.experiences || []);
+      } else {
+        // 데이터가 없으면 입력 가능한 빈 상태로 유지
+        setResume({ title: "", body: "", link: "" });
       }
     } catch (e) {
-      // 404 에러 등이 나면 데이터가 없는 것으로 간주
-      setResume(null);
-      console.log("등록된 이력서가 없습니다.");
+      console.log("등록된 이력서가 없거나 불러오기 실패");
+      setResume({ title: "", body: "", link: "" });
     } finally {
       setLoading(false);
     }
@@ -38,28 +47,39 @@ const MyResumePage = () => {
     fetchData();
   }, [fetchData]);
 
-  // 이력서 저장/수정
+  // 이력서 저장/수정 함수 수정
   const handleSaveResume = async () => {
     try {
-      // resume가 있고 resumeCode가 있다면 수정(PATCH), 없다면 신규 생성(POST)
+      let response;
       if (resume && resume.resumeCode) {
-        await api.patch(`/resumes/${resume.resumeCode}`, {
+        // 수정 (PATCH)
+        response = await api.patch(`/resumes/${resume.resumeCode}`, {
           title: resume.title,
           body: resume.body,
           link: resume.link,
         });
       } else {
-        await api.post("/resumes", {
+        // 신규 등록 (POST)
+        response = await api.post("/resumes", {
           title: resume?.title || "",
           body: resume?.body || "",
           link: resume?.link || "",
         });
       }
-      alert("이력서가 저장되었습니다.");
-      setIsEditingResume(false);
-      fetchData();
+
+      // 서버 응답 구조가 res.data.data 인지 res.data 인지 확인 필요
+      const savedData = response.data.data || response.data;
+
+      if (savedData) {
+        setResume(savedData); // 이제 resumeCode가 상태에 저장됩니다
+        alert("이력서가 저장되었습니다.");
+        setIsEditingResume(false);
+      }
+
+      fetchData(); // 다시 한 번 확실히 불러오기
     } catch (e) {
-      alert("이력서 저장 실패");
+      console.error("저장 실패 상세:", e.response?.data || e.message);
+      alert(`저장 실패: ${e.response?.data?.message || "권한 또는 서버 오류"}`);
     }
   };
 
