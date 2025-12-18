@@ -70,27 +70,32 @@ const MyPromotionPage = () => {
     }
   }, []);
 
-  const fetchPromotion = useCallback(() => {
-    api
-      .get("/self-promotions/me")
-      .then((res) => {
-        if (res.data.data) {
-          setPromotion(res.data.data);
-          setFormData({
-            title: res.data.data.title,
-            content: res.data.data.content,
-            paymentType: res.data.data.paymentType,
-            unitAmount: res.data.data.unitAmount,
-            resumeCode: res.data.data.resumeCode || "",
-            pdfKey: res.data.data.pdfKey || "",
-          });
-          setIsEditing(false);
-        }
-      })
-      .catch(() => {
+  const fetchPromotion = useCallback(async () => {
+    try {
+      const res = await api.get("/self-promotions/me");
+      // 서버 응답 구조 확인 (res.data.data 또는 res.data)
+      const data = res.data.data || res.data;
+
+      if (data && (data.promotionCode || data.id)) {
+        setPromotion(data);
+        setFormData({
+          title: data.title || "",
+          content: data.content || "",
+          paymentType: data.paymentType || "PER_JOB",
+          unitAmount: data.unitAmount || 0,
+          resumeCode: data.resumeCode || "",
+          pdfKey: data.pdfKey || "",
+        });
+        setIsEditing(false);
+      } else {
         setPromotion(null);
         setIsEditing(true);
-      });
+      }
+    } catch (e) {
+      console.log("프로모션 정보 없음");
+      setPromotion(null);
+      setIsEditing(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -100,17 +105,28 @@ const MyPromotionPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (uploading) return alert("파일 업로드 중입니다.");
+
     try {
-      const payload = { ...formData, resumeCode: formData.resumeCode || null };
-      if (promotion) {
+      const payload = {
+        ...formData,
+        resumeCode: formData.resumeCode || null,
+      };
+
+      // promotionCode가 확실히 존재하는지 체크
+      if (promotion && promotion.promotionCode) {
+        console.log("수정 요청(PATCH)을 보냅니다:", promotion.promotionCode);
         await api.patch(`/self-promotions/${promotion.promotionCode}`, payload);
       } else {
+        console.log("신규 등록(POST)을 보냅니다.");
         await api.post("/self-promotions", payload);
       }
+
       alert("저장 완료!");
+      await fetchPromotion(); // 데이터를 다시 불러와서 promotion 상태를 최신화
       setIsEditing(false);
-      fetchPromotion();
     } catch (e) {
+      console.error(e);
       alert("저장 실패");
     }
   };
