@@ -1,108 +1,205 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { styles} from "../styles/styles";
+import { useNavigate, useLocation } from "react-router-dom";
+import { styles } from "../styles/styles";
+import axios from "axios"; // axios 기본 인스턴스 (인터셉터 우회 목적)
+import { useAuth } from "../components/AuthContext"; // useAuth 훅
 import App from "../App";
+
+const EC2_DOMAIN = process.env.REACT_APP_EC2_DOMAIN;
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const REISSUE_URL = process.env.REACT_APP_REISSUE_URL;
 
 // V1 위젯 클라이언트 키
 const widgetClientKey = "test_gck_docs_Ovk5rk1EwkRWBwXLpaerP";
-// Java 서버 주소
-const API_BASE_URL = "http://localhost:8080";
 
 // ==========================================
 // 1. ChargePage (충전 금액 입력 화면 - 스크린샷 UI)
 // ==========================================
 function ChargePage() {
-    const navigate = useNavigate();
-    const [amount, setAmount] = useState(''); // 문자열로 관리 (빈 값 처리 용이)
+  const navigate = useNavigate();
+  const { authState, login } = useAuth(); // 💡 useAuth로 login 함수와 상태 획득
+  const [amount, setAmount] = useState("");
+  const [isLoading, setIsLoading] = useState(true); // 💡 로딩 상태 추가 (토큰 획득 중 화면 깜빡임 방지)
 
+  // 한 번만 재발급 시도하도록 플래그
+  const attemptedReissueRef = useRef(false);
 
-    // 금액 버튼 (+1만, +5만 등)
-    const handleAddAmount = (val) => {
-        setAmount((prev) => {
-            const current = prev === '' ? 0 : parseInt(prev.replace(/,/g, ''), 10);
-            return (current + val).toLocaleString();
-        });
-    };
+  // 💡 Access Token 획득 로직
+  useEffect(() => {
+    // 이미 Access Token이 있으면 로딩 종료
+    if (authState.isLoggedIn) {
+      setIsLoading(false);
+      return;
+    }
 
-    // 직접 입력 핸들러 (숫자만 허용 및 콤마 포맷팅)
-    const handleInputChange = (e) => {
-        const value = e.target.value.replace(/,/g, '');
-        if (value === '') {
-            setAmount('');
-            return;
+    // 이미 시도했으면 다시 시도하지 않음
+    if (attemptedReissueRef.current) {
+      setIsLoading(false);
+      return;
+    }
+
+    // AccessToken이 로컬스토리지에 없으면 refresh로 재발급 시도
+    if (!localStorage.getItem("accessToken")) {
+      attemptedReissueRef.current = true;
+
+      const attemptReissue = async () => {
+        try {
+          const response = await axios.post(
+            REISSUE_URL,
+            {},
+            { withCredentials: true }
+          );
+
+          const newAccessToken = response.headers["authorization"]?.replace(
+            "Bearer ",
+            ""
+          );
+
+          if (newAccessToken) {
+            login(newAccessToken);
+          } else {
+            // 헤더에 토큰이 없으면 로그인 필요 상태로 처리 (로그인 흐름에 맡김)
+            console.warn("Reissue 응답에 authorization 헤더가 없습니다.");
+          }
+        } catch (error) {
+          // 재발급 실패: 보통 RefreshToken 만료/없음. 로그인 유도(ProtectedRoute / AuthContext가 처리)
+          console.error(
+            "Access Token 재발급 실패:",
+            error?.response?.data || error?.message || error
+          );
+        } finally {
+          setIsLoading(false);
         }
-        if (!isNaN(value)) {
-            setAmount(parseInt(value, 10).toLocaleString());
-        }
-    };
+      };
 
-    // 충전하기 버튼 클릭 (결제 페이지로 이동)
-    const handleSubmit = () => {
-        const finalAmount = amount === '' ? 0 : parseInt(amount.replace(/,/g, ''), 10);
+      attemptReissue();
+    } else {
+      setIsLoading(false);
+    }
+  }, [authState.isLoggedIn, login]);
 
-        if (finalAmount <= 0) {
-            alert("0원 이상을 입력해주세요.");
-            return;
-        }
-
-        // PaymentPage로 이동하며 state에 금액 전달
-        navigate('/payment', { state: { price: finalAmount } });
-    };
-
+  if (isLoading && !authState.isLoggedIn) {
     return (
-        <div style={styles.container}>
-            {/* 헤더 */}
-            <header style={styles.header}>
-                <button style={styles.backButton} onClick={() => alert('뒤로가기')}></button>
-                <h2 style={styles.headerTitle}>충전하기 <span style={{fontSize: '14px', color: '#999'}}></span></h2>
-                <span style={styles.headerRight}></span>
-            </header>
-
-            <div style={styles.content}>
-                {/* 로고 및 텍스트 */}
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-                    {/*<div style={styles.logoIcon}>M</div> /!* 로고 대체 *!/*/}
-                    <span style={{ fontSize: '18px', fontWeight: 'bold' }}>충전 머니로</span>
-                </div>
-
-                {/* 금액 입력 인풋 */}
-                <div style={styles.inputWrapper}>
-                    <input
-                        type="text"
-                        placeholder="충전할 금액을 입력해 주세요."
-                        value={amount}
-                        onChange={handleInputChange}
-                        style={styles.input}
-                    />
-                    {amount && <span style={styles.currencyUnit}>원</span>}
-                </div>
-
-                {/* 금액 추가 버튼들 */}
-                <div style={styles.buttonGrid}>
-                    <button style={styles.amountBtn} onClick={() => handleAddAmount(10000)}>+1만</button>
-                    <button style={styles.amountBtn} onClick={() => handleAddAmount(50000)}>+5만</button>
-                    <button style={styles.amountBtn} onClick={() => handleAddAmount(100000)}>+10만</button>
-                    <button style={styles.amountBtn} onClick={() => handleAddAmount(1000000)}>+100만</button>
-                </div>
-
-
-            </div>
-
-            {/* 하단 고정 버튼 */}
-            <button
-                style={{
-                    ...styles.submitButton,
-                    backgroundColor: amount ? '#3182f6' : '#E2E2E2', // 입력값 있으면 민트색, 없으면 회색
-                    color: amount ? 'white' : '#999'
-                }}
-                disabled={!amount}
-                onClick={handleSubmit}
-            >
-                충전하기
-            </button>
-        </div>
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        로그인 인증 정보 처리 중...
+      </div>
     );
+  }
+
+  const handleAddAmount = (val) => {
+    setAmount((prev) => {
+      const current = prev === "" ? 0 : parseInt(prev.replace(/,/g, ""), 10);
+      return (current + val).toLocaleString();
+    });
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value.replace(/,/g, "");
+    if (value === "") {
+      setAmount("");
+      return;
+    }
+    if (!isNaN(value)) {
+      setAmount(parseInt(value, 10).toLocaleString());
+    }
+  };
+
+  const handleSubmit = () => {
+    const finalAmount =
+      amount === "" ? 0 : parseInt(amount.replace(/,/g, ""), 10);
+    if (finalAmount <= 0) {
+      alert("0원 이상을 입력해주세요.");
+      return;
+    }
+    navigate("/payment", { state: { price: finalAmount } });
+  };
+
+  return (
+    <div style={styles.container}>
+      <header style={styles.header}>
+        <button
+          style={styles.backButton}
+          onClick={() => alert("뒤로가기")}
+        ></button>
+        <h2 style={styles.headerTitle}>
+          충전하기 <span style={{ fontSize: "14px", color: "#999" }}></span>
+        </h2>
+        <span style={styles.headerRight}></span>
+      </header>
+
+      <div style={styles.content}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            marginBottom: "20px",
+          }}
+        >
+          <span style={{ fontSize: "18px", fontWeight: "bold" }}>
+            충전 머니로
+          </span>
+        </div>
+
+        <div style={styles.inputWrapper}>
+          <input
+            type="text"
+            placeholder="충전할 금액을 입력해 주세요."
+            value={amount}
+            onChange={handleInputChange}
+            style={styles.input}
+          />
+          {amount && <span style={styles.currencyUnit}>원</span>}
+        </div>
+
+        <div style={styles.buttonGrid}>
+          <button
+            style={styles.amountBtn}
+            onClick={() => handleAddAmount(10000)}
+          >
+            +1만
+          </button>
+          <button
+            style={styles.amountBtn}
+            onClick={() => handleAddAmount(50000)}
+          >
+            +5만
+          </button>
+          <button
+            style={styles.amountBtn}
+            onClick={() => handleAddAmount(100000)}
+          >
+            +10만
+          </button>
+          <button
+            style={styles.amountBtn}
+            onClick={() => handleAddAmount(1000000)}
+          >
+            +100만
+          </button>
+        </div>
+      </div>
+
+      <button
+        style={{
+          ...styles.submitButton,
+          backgroundColor: amount ? "#3182f6" : "#E2E2E2",
+          color: amount ? "white" : "#999",
+        }}
+        disabled={!amount}
+        onClick={handleSubmit}
+      >
+        충전하기
+      </button>
+    </div>
+  );
 }
 
 export default ChargePage;
