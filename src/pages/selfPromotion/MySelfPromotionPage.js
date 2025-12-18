@@ -5,6 +5,7 @@ import axios from "axios"; // 파일 직접 전송을 위해 axios 기본 객체
 const MyPromotionPage = () => {
   const [promotion, setPromotion] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [myResumes, setMyResumes] = useState([]);
   const [uploading, setUploading] = useState(false);
 
@@ -83,9 +84,13 @@ const MyPromotionPage = () => {
             resumeCode: res.data.data.resumeCode || "",
             pdfKey: res.data.data.pdfKey || "",
           });
+          setIsEditing(false);
         }
       })
-      .catch(() => setPromotion(null));
+      .catch(() => {
+        setPromotion(null);
+        setIsEditing(true);
+      });
   }, []);
 
   useEffect(() => {

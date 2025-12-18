@@ -21,7 +21,7 @@ const MyPage4 = () => {
     { id: "tags", label: "기술 스택", icon: <Hash className="w-4 h-4" /> },
     {
       id: "promotion",
-      label: "수주 홍보",
+      label: "셀프 프로모션",
       icon: <Megaphone className="w-4 h-4" />,
     },
   ];
