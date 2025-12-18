@@ -202,9 +202,8 @@ const CommissionUpsertPage = ({ action }) => {
                                 onChange={handleChange}
                                 className="w-full p-3 border border-gray-300 rounded-lg bg-white focus:outline-indigo-500"
                             >
-                                <option value="FIXED">고정 금액 (프로젝트 단위)</option>
-                                <option value="HOURLY">시급제</option>
-                                <option value="FLAT">건당 지급</option>
+                                <option value="MONTHLY">월급</option>
+                                <option value="PER_JOB">건당 지급</option>
                             </select>
                         </div>
                         <div>
