@@ -54,7 +54,7 @@ function App() {
             <Routes>
               {/* Public Routes: 로그인 불필요 */}
               <Route path="/" element={<LandingPage />} />
-              <Route path="/member" element={<UserPage />} />
+              <Route path="/member/:memberCode" element={<UserPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/login/need-signed-up" element={<SignUpPage />} />
               <Route path="/login/success" element={<LoginSuccessPage />} />
