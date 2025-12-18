@@ -108,7 +108,7 @@ const CommissionDetail = () => {
             }
         } catch (err) {
             console.error("데이터 로딩 실패:", err)
-            setError("의뢰 정보를 불러오는 데 실패했습니다.")
+            setIsAuthor(false)
         } finally {
             console.log("작성자 여부 확인 성공")
             console.log(isAuthor)
