@@ -648,10 +648,10 @@ const CommissionSearchResultPage = () => {
                             key={item.code}
                             role="button"
                             tabIndex={0}
-                            onClick={() => navigate(`/commissions/${item.code}`)}
+                            onClick={() => navigate(`/commission/${item.code}`)}
                             onKeyDown={(e) => {
                                 if (e.key === "Enter" || e.key === " ") {
-                                    navigate(`/commissions/${item.code}`);
+                                    navigate(`/commission/${item.code}`);
                                 }
                             }}
                             className="p-5 border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -669,13 +669,13 @@ const CommissionSearchResultPage = () => {
                                     className="font-medium text-gray-800 hover:underline"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        navigate(`/members/${item.memberCode}`);
+                                        navigate(`/member/${item.memberCode}`);
                                     }}
                                     onKeyDown={(e) => {
                                         // 카드의 onKeyDown으로 이벤트가 올라가는 것도 막아줌
                                         e.stopPropagation();
                                         if (e.key === "Enter" || e.key === " ") {
-                                            navigate(`/members/${item.memberCode}`);
+                                            navigate(`/member/${item.memberCode}`);
                                         }
                                     }}
                                 >
