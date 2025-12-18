@@ -11,6 +11,7 @@ import SignUpPage from "./pages/SignUpPage";
 import FailPage from "./pages/FailPage";
 import CommissionSearchResultPage from "./pages/search/CommissionSearchResultPage";
 import PromotionSearchResultPage from "./pages/search/PromotionSearchResultPage";
+import CommissionDetailPage from "./pages/commisions/CommissionDetailPage";
 
 // Protected Pages (로그인 필수)
 // 결제 관련
@@ -62,6 +63,10 @@ function App() {
                 path="/search/commissions"
                 element={<CommissionSearchResultPage />}
               />
+              <Route
+                path="commission/:code"
+                element={<CommissionDetailPage/>}
+                />
               <Route
                 path="/search/promotions"
                 element={<PromotionSearchResultPage />}
