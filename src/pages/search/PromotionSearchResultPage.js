@@ -392,12 +392,12 @@ const PromotionSearchResultPage = () => {
                                     className="font-medium text-gray-800 hover:underline"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        navigate(`/members/${item.memberCode}`);
+                                        navigate(`/member/${item.memberCode}`);
                                     }}
                                     onKeyDown={(e) => {
                                         e.stopPropagation();
                                         if (e.key === "Enter" || e.key === " ") {
-                                            navigate(`/members/${item.memberCode}`);
+                                            navigate(`/member/${item.memberCode}`);
                                         }
                                     }}
                                 >
