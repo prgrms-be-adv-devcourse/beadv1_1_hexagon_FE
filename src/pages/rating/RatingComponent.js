@@ -10,13 +10,6 @@ const RatingComponent = ({ memberCode, contractCode }) => {
   });
   const [loading, setLoading] = useState(true);
 
-  const getXCodeHeader = () => {
-    let token = localStorage.getItem("accessToken");
-    if (token && token.startsWith("Bearer "))
-      token = token.replace("Bearer ", "");
-    return token ? { "X-CODE": token } : {};
-  };
-
   const fetchRating = useCallback(async () => {
     if (!memberCode) return;
     try {
@@ -41,14 +34,10 @@ const RatingComponent = ({ memberCode, contractCode }) => {
 
     try {
       // 백엔드 RatingRequest 구조: { contractCode, satisfied }
-      const res = await api.patch(
-        `/ratings/${memberCode}`,
-        {
-          contractCode: contractCode,
-          satisfied: isSatisfied,
-        },
-        { headers: getXCodeHeader() }
-      );
+      const res = await api.patch(`/ratings/${memberCode}`, {
+        contractCode: contractCode,
+        satisfied: isSatisfied,
+      });
 
       setRating(res.data.data);
       alert(

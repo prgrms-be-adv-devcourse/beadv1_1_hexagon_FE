@@ -22,17 +22,10 @@ const MyResumePage = () => {
   });
   const [isAddingExp, setIsAddingExp] = useState(false);
 
-  const getXCodeHeader = () => {
-    let token = localStorage.getItem("accessToken");
-    if (token && token.startsWith("Bearer "))
-      token = token.replace("Bearer ", "");
-    return token ? { "X-CODE": token } : {};
-  };
-
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get("/resumes/me", { headers: getXCodeHeader() });
+      const res = await api.get("/resumes/me");
       if (res.data.data) {
         setResume(res.data.data);
         setExperiences(res.data.data.experiences || []);
@@ -53,18 +46,18 @@ const MyResumePage = () => {
     try {
       if (resume.resumeCode) {
         // 수정 모드 (PATCH /api/resumes/{resumeCode})
-        await api.patch(
-          `/resumes/${resume.resumeCode}`,
-          { title: resume.title, body: resume.body, link: resume.link },
-          { headers: getXCodeHeader() }
-        );
+        await api.patch(`/resumes/${resume.resumeCode}`, {
+          title: resume.title,
+          body: resume.body,
+          link: resume.link,
+        });
       } else {
         // 생성 모드 (POST /api/resumes)
-        await api.post(
-          "/resumes",
-          { title: resume.title, body: resume.body, link: resume.link },
-          { headers: getXCodeHeader() }
-        );
+        await api.post("/resumes", {
+          title: resume.title,
+          body: resume.body,
+          link: resume.link,
+        });
       }
       alert("이력서가 저장되었습니다.");
       setIsEditingResume(false);
@@ -87,9 +80,7 @@ const MyResumePage = () => {
         startedAt: new Date(newExp.startedAt).toISOString(),
         endedAt: newExp.endedAt ? new Date(newExp.endedAt).toISOString() : null,
       };
-      await api.post(`/resumes/${resume.resumeCode}/experiences`, payload, {
-        headers: getXCodeHeader(),
-      });
+      await api.post(`/resumes/${resume.resumeCode}/experiences`, payload, {});
       alert("경력이 추가되었습니다.");
       setNewExp({
         title: "",
@@ -273,8 +264,7 @@ const MyResumePage = () => {
                 onClick={async () => {
                   if (window.confirm("삭제하시겠습니까?")) {
                     await api.delete(
-                      `/resumes/${resume.resumeCode}/experiences/${exp.experienceCode}`,
-                      { headers: getXCodeHeader() }
+                      `/resumes/${resume.resumeCode}/experiences/${exp.experienceCode}`
                     );
                     fetchData();
                   }

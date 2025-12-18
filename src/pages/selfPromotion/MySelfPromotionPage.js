@@ -17,13 +17,6 @@ const MyPromotionPage = () => {
     pdfKey: "", // 서버에 저장할 S3 Key
   });
 
-  const getXCodeHeader = () => {
-    let token = localStorage.getItem("accessToken");
-    if (token && token.startsWith("Bearer "))
-      token = token.replace("Bearer ", "");
-    return token ? { "X-CODE": token } : {};
-  };
-
   // 1. S3 Pre-signed URL을 이용한 파일 업로드 로직
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -38,15 +31,11 @@ const MyPromotionPage = () => {
     try {
       // (1) 서버에 업로드용 Pre-signed URL 요청
       // 백엔드 스펙: serviceName(ENUM), fileName, contentType 필요
-      const urlRes = await api.post(
-        "/s3/upload-url",
-        {
-          serviceName: "SELF_PROMOTIONS", // 백엔드 ServiceName ENUM 확인 필요
-          fileName: file.name,
-          contentType: file.type,
-        },
-        { headers: getXCodeHeader() }
-      );
+      const urlRes = await api.post("/s3/upload-url", {
+        serviceName: "SELF_PROMOTIONS", // 백엔드 ServiceName ENUM 확인 필요
+        fileName: file.name,
+        contentType: file.type,
+      });
 
       const { uploadUrl, fileKey } = urlRes.data.data;
 
@@ -70,7 +59,7 @@ const MyPromotionPage = () => {
   // 2. 데이터 페칭 로직 (이전과 동일)
   const fetchMyResumes = useCallback(async () => {
     try {
-      const res = await api.get("/resumes/me", { headers: getXCodeHeader() });
+      const res = await api.get("/resumes/me");
       const data = Array.isArray(res.data.data)
         ? res.data.data
         : [res.data.data];
@@ -82,7 +71,7 @@ const MyPromotionPage = () => {
 
   const fetchPromotion = useCallback(() => {
     api
-      .get("/self-promotions/me", { headers: getXCodeHeader() })
+      .get("/self-promotions/me")
       .then((res) => {
         if (res.data.data) {
           setPromotion(res.data.data);
@@ -109,15 +98,9 @@ const MyPromotionPage = () => {
     try {
       const payload = { ...formData, resumeCode: formData.resumeCode || null };
       if (promotion) {
-        await api.patch(
-          `/self-promotions/${promotion.promotionCode}`,
-          payload,
-          { headers: getXCodeHeader() }
-        );
+        await api.patch(`/self-promotions/${promotion.promotionCode}`, payload);
       } else {
-        await api.post("/self-promotions", payload, {
-          headers: getXCodeHeader(),
-        });
+        await api.post("/self-promotions", payload);
       }
       alert("저장 완료!");
       setIsEditing(false);
@@ -129,7 +112,9 @@ const MyPromotionPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-3xl font-bold mb-8 text-gray-800">수주 홍보 관리</h2>
+      <h2 className="text-3xl font-bold mb-8 text-gray-800">
+        셀프 프로모션 관리
+      </h2>
 
       {isEditing ? (
         <form

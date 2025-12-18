@@ -35,6 +35,7 @@ import MemberRatingPage from "./pages/rating/RatingComponent"; // 다른 회원 
 import ContractDetailPage from "./pages/contract/ContractDetailPage";
 import LoginSuccessPage from "./pages/LoginSuccessPage";
 import MyPage from "./pages/member/MyPage";
+import MyPage4 from "./pages/member/MyPage4";
 
 import LandingPage from "./pages/LandingPage"; // 다른 회원 평가도 로그인 후 가능
 import MemberUpdatePage from "./pages/member/MemberUpdatePage"; // 다른 회원 평가도 로그인 후 가능
@@ -99,6 +100,7 @@ function App() {
                 <Route path="/mypage" element={<MyPage />} />
                 <Route path="/mypage/update" element={<MemberUpdatePage />} />
                 <Route path="/mypage/profile" element={<MyProfilePage />} />
+                <Route path="/mypage/manage" element={<MyPage4 />} />
                 <Route
                   path="/mypage/commissions/own"
                   element={<MyCommissionsPage />}
