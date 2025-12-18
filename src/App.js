@@ -65,14 +65,19 @@ function App() {
                 path="/search/commissions"
                 element={<CommissionSearchResultPage />}
               />
-              <Route
-                path="commission/:code"
-                element={<CommissionDetailPage/>}
-                />
+
               <Route
                 path="/search/promotions"
                 element={<PromotionSearchResultPage />}
               />
+                <Route path="/commissions/new" element={<CommissionUpsertPage action="create" />} />
+
+                {/* 2. 그 다음 동적 파라미터(:code)가 들어간 경로를 씁니다. */}
+                {/* 수정 페이지 */}
+                <Route path="/commissions/:code/edit" element={<CommissionUpsertPage action="update" />} />
+
+                {/* 상세 페이지 */}
+                <Route path="/commissions/:code" element={<CommissionDetailPage />} />
 
               {/* Protected Routes: 로그인 필수 */}
               <Route element={<ProtectedRoute />}>
@@ -85,14 +90,7 @@ function App() {
 
                 {/* 의뢰글 등록/수정 (CommissionUpsertPage는 action props를 받아야 함) */}
                 {/* Action props 전달을 위해 래핑 컴포넌트 사용 또는 페이지 내부에서 파싱 */}
-                <Route
-                  path="/commissions/new"
-                  element={<CommissionUpsertPage action="create" />}
-                />
-                <Route
-                  path="/commissions/:code/edit"
-                  element={<CommissionUpsertPage action="update" />}
-                />
+
 
                 <Route path="/verify" element={<EmailVerification />} />
                 <Route

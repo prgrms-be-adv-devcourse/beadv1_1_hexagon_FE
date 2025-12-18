@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { styles } from "../styles/styles";
-
+import api from '../api/api';
 // Java 서버 주소
 const API_BASE_URL = "http://localhost:8000/api/payments";
 
@@ -49,21 +49,13 @@ export default function SuccessPage() {
                 console.log("전송할 토큰:", token);
 
                 // 2. Axios 요청 설정
-                const response = await axios.post(
-                    `${API_BASE_URL}/confirm`,
+                const response = await api.post(
+                    `payments/confirm`,
                     {
                         paymentKey,
                         orderId,
                         amount
                     },
-                    {
-                        ...axiosConfig,
-                        headers: {
-                            "Content-Type": "application/json",
-                            // 3. Bearer를 여기서 딱 한 번만 붙여서 완성
-                            'Authorization': `Bearer ${token}`
-                        }
-                    }
                 );
 
                 // 성공 시
