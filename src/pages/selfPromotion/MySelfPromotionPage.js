@@ -73,26 +73,33 @@ const MyPromotionPage = () => {
   const fetchPromotion = useCallback(async () => {
     try {
       const res = await api.get("/self-promotions/me");
-      // 서버 응답 구조 확인 (res.data.data 또는 res.data)
-      const data = res.data.data || res.data;
+      console.log("서버에서 온 프로모션 원본 데이터:", res.data);
 
-      if (data && (data.promotionCode || data.id)) {
-        setPromotion(data);
+      // 서버 응답 구조에 따라 데이터 추출 (res.data.data 또는 res.data)
+      const serverData = res.data.data || res.data;
+
+      // 만약 serverData가 배열로 온다면 첫 번째 요소를 사용
+      const actualData = Array.isArray(serverData) ? serverData[0] : serverData;
+
+      if (actualData && (actualData.promotionCode || actualData.id)) {
+        setPromotion(actualData);
         setFormData({
-          title: data.title || "",
-          content: data.content || "",
-          paymentType: data.paymentType || "PER_JOB",
-          unitAmount: data.unitAmount || 0,
-          resumeCode: data.resumeCode || "",
-          pdfKey: data.pdfKey || "",
+          title: actualData.title || "",
+          content: actualData.content || "",
+          paymentType: actualData.paymentType || "PER_JOB",
+          unitAmount: actualData.unitAmount || 0,
+          resumeCode: actualData.resumeCode || "",
+          pdfKey: actualData.pdfKey || "",
         });
         setIsEditing(false);
       } else {
+        // 데이터가 비어있을 때 (예: status 200인데 빈 객체)
         setPromotion(null);
         setIsEditing(true);
       }
     } catch (e) {
-      console.log("프로모션 정보 없음");
+      // 404나 500 에러 시
+      console.error("프로모션 페칭 에러 상세:", e.response || e);
       setPromotion(null);
       setIsEditing(true);
     }
